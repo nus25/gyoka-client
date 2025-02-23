@@ -9,7 +9,7 @@ import (
 
 	"log/slog"
 
-	"github.com/nus25/gyokaclient/go/types"
+	"github.com/nus25/gyoka-client/go/types"
 	"github.com/stretchr/testify/assert"
 )
 

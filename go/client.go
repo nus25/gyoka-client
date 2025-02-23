@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nus25/gyokaclient/go/types"
+	"github.com/nus25/gyoka-client/go/types"
 )
 
 // HTTPクライアントの設定を定数として定義

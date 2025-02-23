@@ -1,4 +1,4 @@
-module github.com/nus25/gyokaclient/go
+module github.com/nus25/gyoka-client/go
 
 go 1.23.3
 
