@@ -15,7 +15,7 @@
                     "Feed Editor"
                 ],
                 "summary": "Get feed list",
-                "operationId": "get_ListFeed",
+                "operationId": "get_ListFeeds",
                 "responses": {
                     "200": {
                         "description": "Feed list",
@@ -29,22 +29,22 @@
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
-                                                    "id": {
-                                                        "type": "number"
-                                                    },
                                                     "uri": {
                                                         "type": "string",
                                                         "format": "at-uri",
                                                         "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
                                                     },
-                                                    "is_active": {
+                                                    "langFilter": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "isActive": {
                                                         "type": "boolean"
                                                     }
                                                 },
                                                 "required": [
-                                                    "id",
                                                     "uri",
-                                                    "is_active"
+                                                    "langFilter",
+                                                    "isActive"
                                                 ]
                                             }
                                         }
@@ -97,18 +97,22 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "feed_uri": {
+                                    "uri": {
                                         "type": "string",
                                         "format": "at-uri",
                                         "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
                                     },
-                                    "is_active": {
+                                    "langFilter": {
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "isActive": {
                                         "type": "boolean",
                                         "default": true
                                     }
                                 },
                                 "required": [
-                                    "feed_uri"
+                                    "uri"
                                 ]
                             }
                         }
@@ -133,13 +137,17 @@
                                                     "format": "at-uri",
                                                     "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
                                                 },
-                                                "is_active": {
+                                                "langFilter": {
+                                                    "type": "boolean"
+                                                },
+                                                "isActive": {
                                                     "type": "boolean"
                                                 }
                                             },
                                             "required": [
                                                 "uri",
-                                                "is_active"
+                                                "langFilter",
+                                                "isActive"
                                             ]
                                         }
                                     },
@@ -242,14 +250,14 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "feed_uri": {
+                                    "uri": {
                                         "type": "string",
                                         "format": "at-uri",
                                         "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
                                     }
                                 },
                                 "required": [
-                                    "feed_uri"
+                                    "uri"
                                 ]
                             }
                         }
@@ -315,6 +323,157 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The requested resource was not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "InternalServerError"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An unexpected error occurred"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/feed/updateFeed": {
+            "post": {
+                "tags": [
+                    "Feed Editor"
+                ],
+                "summary": "Update feed setting",
+                "operationId": "post_UpdateFeed",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "uri": {
+                                        "type": "string",
+                                        "format": "at-uri",
+                                        "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
+                                    },
+                                    "langFilter": {
+                                        "type": "boolean"
+                                    },
+                                    "isActive": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "uri"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Feed update succeed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "feed": {
+                                            "type": "object",
+                                            "properties": {
+                                                "uri": {
+                                                    "type": "string",
+                                                    "format": "at-uri",
+                                                    "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
+                                                },
+                                                "langFilter": {
+                                                    "type": "boolean"
+                                                },
+                                                "isActive": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "uri",
+                                                "langFilter",
+                                                "isActive"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "feed"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "BadRequest"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unknown Feed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "UnknownFeed"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Feed with URI {feedUri} does not exist."
                                         }
                                     },
                                     "required": [
@@ -520,6 +679,7 @@
                                             },
                                             "languages": {
                                                 "type": "array",
+                                                "nullable": true,
                                                 "items": {
                                                     "type": "string"
                                                 }
@@ -658,6 +818,31 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unknown Feed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "UnknownFeed"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Feed with URI {feedUri} does not exist."
                                         }
                                     },
                                     "required": [
@@ -972,6 +1157,60 @@
                                     },
                                     "required": [
                                         "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "InternalServerError"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "An unexpected error occurred"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/gyoka/ping": {
+            "get": {
+                "tags": [
+                    "Feed Editor"
+                ],
+                "summary": "Ping system",
+                "operationId": "get_Ping",
+                "responses": {
+                    "200": {
+                        "description": "respond ping request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }

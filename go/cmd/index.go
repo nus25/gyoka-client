@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("クライアントの作成に失敗しました: %v", err)
 	}
 
-	resp, err := client.GetListFeed(context.Background())
+	resp, err := client.GetListFeeds(context.Background())
 	if err != nil {
 		log.Fatalf("API 呼び出しに失敗しました: %v", err)
 	}

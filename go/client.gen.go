@@ -32,7 +32,7 @@ type PostAddPostJSONBody struct {
 		// FeedContext Context passed through to the client and feed generator.
 		FeedContext *string    `json:"feedContext,omitempty"`
 		IndexedAt   *time.Time `json:"indexedAt,omitempty"`
-		Languages   *[]string  `json:"languages,omitempty"`
+		Languages   *[]string  `json:"languages"`
 
 		// Reason Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
 		Reason *struct {
@@ -51,8 +51,9 @@ type GetGetPostsParams struct {
 
 // PostRegisterFeedJSONBody defines parameters for PostRegisterFeed.
 type PostRegisterFeedJSONBody struct {
-	FeedUri  string `json:"feed_uri"`
-	IsActive *bool  `json:"is_active,omitempty"`
+	IsActive   *bool  `json:"isActive,omitempty"`
+	LangFilter *bool  `json:"langFilter,omitempty"`
+	Uri        string `json:"uri"`
 }
 
 // PostRemovePostJSONBody defines parameters for PostRemovePost.
@@ -74,7 +75,14 @@ type PostTrimFeedJSONBody struct {
 
 // PostUnregisterFeedJSONBody defines parameters for PostUnregisterFeed.
 type PostUnregisterFeedJSONBody struct {
-	FeedUri string `json:"feed_uri"`
+	Uri string `json:"uri"`
+}
+
+// PostUpdateFeedJSONBody defines parameters for PostUpdateFeed.
+type PostUpdateFeedJSONBody struct {
+	IsActive   *bool  `json:"isActive,omitempty"`
+	LangFilter *bool  `json:"langFilter,omitempty"`
+	Uri        string `json:"uri"`
 }
 
 // PostUpdateDocumentJSONBody defines parameters for PostUpdateDocument.
@@ -101,6 +109,9 @@ type PostTrimFeedJSONRequestBody PostTrimFeedJSONBody
 
 // PostUnregisterFeedJSONRequestBody defines body for PostUnregisterFeed for application/json ContentType.
 type PostUnregisterFeedJSONRequestBody PostUnregisterFeedJSONBody
+
+// PostUpdateFeedJSONRequestBody defines body for PostUpdateFeed for application/json ContentType.
+type PostUpdateFeedJSONRequestBody PostUpdateFeedJSONBody
 
 // PostUpdateDocumentJSONRequestBody defines body for PostUpdateDocument for application/json ContentType.
 type PostUpdateDocumentJSONRequestBody PostUpdateDocumentJSONBody
@@ -186,8 +197,8 @@ type ClientInterface interface {
 	// GetGetPosts request
 	GetGetPosts(ctx context.Context, params *GetGetPostsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetListFeed request
-	GetListFeed(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetListFeeds request
+	GetListFeeds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostRegisterFeedWithBody request with any body
 	PostRegisterFeedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -208,6 +219,14 @@ type ClientInterface interface {
 	PostUnregisterFeedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostUnregisterFeed(ctx context.Context, body PostUnregisterFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostUpdateFeedWithBody request with any body
+	PostUpdateFeedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostUpdateFeed(ctx context.Context, body PostUpdateFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPing request
+	GetPing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostUpdateDocumentWithBody request with any body
 	PostUpdateDocumentWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -251,8 +270,8 @@ func (c *Client) GetGetPosts(ctx context.Context, params *GetGetPostsParams, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetListFeed(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetListFeedRequest(c.Server)
+func (c *Client) GetListFeeds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetListFeedsRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -349,6 +368,42 @@ func (c *Client) PostUnregisterFeedWithBody(ctx context.Context, contentType str
 
 func (c *Client) PostUnregisterFeed(ctx context.Context, body PostUnregisterFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostUnregisterFeedRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUpdateFeedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUpdateFeedRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUpdateFeed(ctx context.Context, body PostUpdateFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUpdateFeedRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetPing(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPingRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -500,8 +555,8 @@ func NewGetGetPostsRequest(server string, params *GetGetPostsParams) (*http.Requ
 	return req, nil
 }
 
-// NewGetListFeedRequest generates requests for GetListFeed
-func NewGetListFeedRequest(server string) (*http.Request, error) {
+// NewGetListFeedsRequest generates requests for GetListFeeds
+func NewGetListFeedsRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -687,6 +742,73 @@ func NewPostUnregisterFeedRequestWithBody(server string, contentType string, bod
 	return req, nil
 }
 
+// NewPostUpdateFeedRequest calls the generic PostUpdateFeed builder with application/json body
+func NewPostUpdateFeedRequest(server string, body PostUpdateFeedJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostUpdateFeedRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostUpdateFeedRequestWithBody generates requests for PostUpdateFeed with any type of body
+func NewPostUpdateFeedRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/feed/updateFeed")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPingRequest generates requests for GetPing
+func NewGetPingRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/gyoka/ping")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPostUpdateDocumentRequest calls the generic PostUpdateDocument builder with application/json body
 func NewPostUpdateDocumentRequest(server string, body PostUpdateDocumentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -778,8 +900,8 @@ type ClientWithResponsesInterface interface {
 	// GetGetPostsWithResponse request
 	GetGetPostsWithResponse(ctx context.Context, params *GetGetPostsParams, reqEditors ...RequestEditorFn) (*GetGetPostsResponse, error)
 
-	// GetListFeedWithResponse request
-	GetListFeedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListFeedResponse, error)
+	// GetListFeedsWithResponse request
+	GetListFeedsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListFeedsResponse, error)
 
 	// PostRegisterFeedWithBodyWithResponse request with any body
 	PostRegisterFeedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostRegisterFeedResponse, error)
@@ -800,6 +922,14 @@ type ClientWithResponsesInterface interface {
 	PostUnregisterFeedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUnregisterFeedResponse, error)
 
 	PostUnregisterFeedWithResponse(ctx context.Context, body PostUnregisterFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUnregisterFeedResponse, error)
+
+	// PostUpdateFeedWithBodyWithResponse request with any body
+	PostUpdateFeedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUpdateFeedResponse, error)
+
+	PostUpdateFeedWithResponse(ctx context.Context, body PostUpdateFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUpdateFeedResponse, error)
+
+	// GetPingWithResponse request
+	GetPingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetPingResponse, error)
 
 	// PostUpdateDocumentWithBodyWithResponse request with any body
 	PostUpdateDocumentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUpdateDocumentResponse, error)
@@ -832,12 +962,17 @@ type PostAddPostResponse struct {
 		Error   PostAddPost400Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
 	}
+	JSON404 *struct {
+		Error   PostAddPost404Error `json:"error"`
+		Message *string             `json:"message,omitempty"`
+	}
 	JSON500 *struct {
 		Error   PostAddPost500Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
 	}
 }
 type PostAddPost400Error string
+type PostAddPost404Error string
 type PostAddPost500Error string
 
 // Status returns HTTPResponse.Status
@@ -901,25 +1036,25 @@ func (r GetGetPostsResponse) StatusCode() int {
 	return 0
 }
 
-type GetListFeedResponse struct {
+type GetListFeedsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		Feeds []struct {
-			Id       float32 `json:"id"`
-			IsActive bool    `json:"is_active"`
-			Uri      string  `json:"uri"`
+			IsActive   bool   `json:"isActive"`
+			LangFilter bool   `json:"langFilter"`
+			Uri        string `json:"uri"`
 		} `json:"feeds"`
 	}
 	JSON500 *struct {
-		Error   GetListFeed500Error `json:"error"`
-		Message *string             `json:"message,omitempty"`
+		Error   GetListFeeds500Error `json:"error"`
+		Message *string              `json:"message,omitempty"`
 	}
 }
-type GetListFeed500Error string
+type GetListFeeds500Error string
 
 // Status returns HTTPResponse.Status
-func (r GetListFeedResponse) Status() string {
+func (r GetListFeedsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -927,7 +1062,7 @@ func (r GetListFeedResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetListFeedResponse) StatusCode() int {
+func (r GetListFeedsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -939,8 +1074,9 @@ type PostRegisterFeedResponse struct {
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		Feed struct {
-			IsActive bool   `json:"is_active"`
-			Uri      string `json:"uri"`
+			IsActive   bool   `json:"isActive"`
+			LangFilter bool   `json:"langFilter"`
+			Uri        string `json:"uri"`
 		} `json:"feed"`
 		Message string `json:"message"`
 	}
@@ -1095,6 +1231,79 @@ func (r PostUnregisterFeedResponse) StatusCode() int {
 	return 0
 }
 
+type PostUpdateFeedResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Feed struct {
+			IsActive   bool   `json:"isActive"`
+			LangFilter bool   `json:"langFilter"`
+			Uri        string `json:"uri"`
+		} `json:"feed"`
+		Message string `json:"message"`
+	}
+	JSON400 *struct {
+		Error   PostUpdateFeed400Error `json:"error"`
+		Message *string                `json:"message,omitempty"`
+	}
+	JSON404 *struct {
+		Error   PostUpdateFeed404Error `json:"error"`
+		Message *string                `json:"message,omitempty"`
+	}
+	JSON500 *struct {
+		Error   PostUpdateFeed500Error `json:"error"`
+		Message *string                `json:"message,omitempty"`
+	}
+}
+type PostUpdateFeed400Error string
+type PostUpdateFeed404Error string
+type PostUpdateFeed500Error string
+
+// Status returns HTTPResponse.Status
+func (r PostUpdateFeedResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostUpdateFeedResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Message string `json:"message"`
+	}
+	JSON500 *struct {
+		Error   GetPing500Error `json:"error"`
+		Message *string         `json:"message,omitempty"`
+	}
+}
+type GetPing500Error string
+
+// Status returns HTTPResponse.Status
+func (r GetPingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostUpdateDocumentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1158,13 +1367,13 @@ func (c *ClientWithResponses) GetGetPostsWithResponse(ctx context.Context, param
 	return ParseGetGetPostsResponse(rsp)
 }
 
-// GetListFeedWithResponse request returning *GetListFeedResponse
-func (c *ClientWithResponses) GetListFeedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListFeedResponse, error) {
-	rsp, err := c.GetListFeed(ctx, reqEditors...)
+// GetListFeedsWithResponse request returning *GetListFeedsResponse
+func (c *ClientWithResponses) GetListFeedsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListFeedsResponse, error) {
+	rsp, err := c.GetListFeeds(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetListFeedResponse(rsp)
+	return ParseGetListFeedsResponse(rsp)
 }
 
 // PostRegisterFeedWithBodyWithResponse request with arbitrary body returning *PostRegisterFeedResponse
@@ -1235,6 +1444,32 @@ func (c *ClientWithResponses) PostUnregisterFeedWithResponse(ctx context.Context
 	return ParsePostUnregisterFeedResponse(rsp)
 }
 
+// PostUpdateFeedWithBodyWithResponse request with arbitrary body returning *PostUpdateFeedResponse
+func (c *ClientWithResponses) PostUpdateFeedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUpdateFeedResponse, error) {
+	rsp, err := c.PostUpdateFeedWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUpdateFeedResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostUpdateFeedWithResponse(ctx context.Context, body PostUpdateFeedJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUpdateFeedResponse, error) {
+	rsp, err := c.PostUpdateFeed(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUpdateFeedResponse(rsp)
+}
+
+// GetPingWithResponse request returning *GetPingResponse
+func (c *ClientWithResponses) GetPingWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetPingResponse, error) {
+	rsp, err := c.GetPing(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPingResponse(rsp)
+}
+
 // PostUpdateDocumentWithBodyWithResponse request with arbitrary body returning *PostUpdateDocumentResponse
 func (c *ClientWithResponses) PostUpdateDocumentWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUpdateDocumentResponse, error) {
 	rsp, err := c.PostUpdateDocumentWithBody(ctx, contentType, body, reqEditors...)
@@ -1299,6 +1534,16 @@ func ParsePostAddPostResponse(rsp *http.Response) (*PostAddPostResponse, error) 
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest struct {
+			Error   PostAddPost404Error `json:"error"`
+			Message *string             `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
@@ -1374,15 +1619,15 @@ func ParseGetGetPostsResponse(rsp *http.Response) (*GetGetPostsResponse, error) 
 	return response, nil
 }
 
-// ParseGetListFeedResponse parses an HTTP response from a GetListFeedWithResponse call
-func ParseGetListFeedResponse(rsp *http.Response) (*GetListFeedResponse, error) {
+// ParseGetListFeedsResponse parses an HTTP response from a GetListFeedsWithResponse call
+func ParseGetListFeedsResponse(rsp *http.Response) (*GetListFeedsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetListFeedResponse{
+	response := &GetListFeedsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1391,9 +1636,9 @@ func ParseGetListFeedResponse(rsp *http.Response) (*GetListFeedResponse, error) 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
 			Feeds []struct {
-				Id       float32 `json:"id"`
-				IsActive bool    `json:"is_active"`
-				Uri      string  `json:"uri"`
+				IsActive   bool   `json:"isActive"`
+				LangFilter bool   `json:"langFilter"`
+				Uri        string `json:"uri"`
 			} `json:"feeds"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1403,8 +1648,8 @@ func ParseGetListFeedResponse(rsp *http.Response) (*GetListFeedResponse, error) 
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
-			Error   GetListFeed500Error `json:"error"`
-			Message *string             `json:"message,omitempty"`
+			Error   GetListFeeds500Error `json:"error"`
+			Message *string              `json:"message,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -1433,8 +1678,9 @@ func ParsePostRegisterFeedResponse(rsp *http.Response) (*PostRegisterFeedRespons
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
 			Feed struct {
-				IsActive bool   `json:"is_active"`
-				Uri      string `json:"uri"`
+				IsActive   bool   `json:"isActive"`
+				LangFilter bool   `json:"langFilter"`
+				Uri        string `json:"uri"`
 			} `json:"feed"`
 			Message string `json:"message"`
 		}
@@ -1642,6 +1888,107 @@ func ParsePostUnregisterFeedResponse(rsp *http.Response) (*PostUnregisterFeedRes
 		var dest struct {
 			Error   PostUnregisterFeed500Error `json:"error"`
 			Message *string                    `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostUpdateFeedResponse parses an HTTP response from a PostUpdateFeedWithResponse call
+func ParsePostUpdateFeedResponse(rsp *http.Response) (*PostUpdateFeedResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostUpdateFeedResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Feed struct {
+				IsActive   bool   `json:"isActive"`
+				LangFilter bool   `json:"langFilter"`
+				Uri        string `json:"uri"`
+			} `json:"feed"`
+			Message string `json:"message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest struct {
+			Error   PostUpdateFeed400Error `json:"error"`
+			Message *string                `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest struct {
+			Error   PostUpdateFeed404Error `json:"error"`
+			Message *string                `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest struct {
+			Error   PostUpdateFeed500Error `json:"error"`
+			Message *string                `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPingResponse parses an HTTP response from a GetPingWithResponse call
+func ParseGetPingResponse(rsp *http.Response) (*GetPingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Message string `json:"message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest struct {
+			Error   GetPing500Error `json:"error"`
+			Message *string         `json:"message,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
