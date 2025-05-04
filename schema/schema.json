@@ -5,7 +5,88 @@
         "title": "OpenAPI"
     },
     "components": {
-        "schemas": {},
+        "schemas": {
+            "AddPostReasonParam": {
+                "type": "object",
+                "properties": {
+                    "$type": {
+                        "type": "string",
+                        "enum": [
+                            "app.bsky.feed.defs#skeletonReasonRepost",
+                            "app.bsky.feed.defs#skeletonReasonPin"
+                        ]
+                    },
+                    "repost": {
+                        "type": "string",
+                        "format": "at-uri",
+                        "description": "Repost uri for repost type.",
+                        "example": "at://did:plc:1234abcd/app.bsky.feed.repost/record123"
+                    }
+                },
+                "required": [
+                    "$type"
+                ],
+                "description": "Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported."
+            },
+            "AddPostPostParam": {
+                "type": "object",
+                "properties": {
+                    "uri": {
+                        "type": "string",
+                        "format": "at-uri",
+                        "example": "at://did:plc:1234abcd/app.bsky.feed.post/record123"
+                    },
+                    "cid": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 128,
+                        "format": "cid",
+                        "example": "sampleiaajksfnn3if2crogjkz5c4bmb2lh2ufspcdf6hfc7mtg6e2bysva"
+                    },
+                    "languages": {
+                        "type": "array",
+                        "nullable": true,
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "indexedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "feedContext": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "description": "Context passed through to the client and feed generator.",
+                        "example": "Some feed context"
+                    },
+                    "reason": {
+                        "$ref": "#/components/schemas/AddPostReasonParam"
+                    }
+                },
+                "required": [
+                    "uri",
+                    "cid"
+                ]
+            },
+            "removePostPostParam": {
+                "type": "object",
+                "properties": {
+                    "uri": {
+                        "type": "string",
+                        "format": "at-uri",
+                        "example": "at://did:plc:1234abcd/app.bsky.feed.post/record123"
+                    },
+                    "indexedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "uri"
+                ]
+            }
+        },
         "parameters": {}
     },
     "paths": {
@@ -663,56 +744,7 @@
                                         "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
                                     },
                                     "post": {
-                                        "type": "object",
-                                        "properties": {
-                                            "uri": {
-                                                "type": "string",
-                                                "format": "at-uri",
-                                                "example": "at://did:plc:1234abcd/app.bsky.feed.post/record123"
-                                            },
-                                            "cid": {
-                                                "type": "string",
-                                                "minLength": 8,
-                                                "maxLength": 128,
-                                                "format": "cid",
-                                                "example": "sampleiaajksfnn3if2crogjkz5c4bmb2lh2ufspcdf6hfc7mtg6e2bysva"
-                                            },
-                                            "languages": {
-                                                "type": "array",
-                                                "nullable": true,
-                                                "items": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "indexedAt": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "feedContext": {
-                                                "type": "string",
-                                                "maxLength": 2000,
-                                                "description": "Context passed through to the client and feed generator.",
-                                                "example": "Some feed context"
-                                            },
-                                            "reason": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "repost": {
-                                                        "type": "string",
-                                                        "format": "at-uri",
-                                                        "example": "at://did:plc:1234abcd/app.bsky.feed.repost/record123"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "repost"
-                                                ],
-                                                "description": "Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported."
-                                            }
-                                        },
-                                        "required": [
-                                            "uri",
-                                            "cid"
-                                        ]
+                                        "$ref": "#/components/schemas/AddPostPostParam"
                                     }
                                 },
                                 "required": [
@@ -773,14 +805,22 @@
                                                 "reason": {
                                                     "type": "object",
                                                     "properties": {
+                                                        "$type": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "app.bsky.feed.defs#skeletonReasonRepost",
+                                                                "app.bsky.feed.defs#skeletonReasonPin"
+                                                            ]
+                                                        },
                                                         "repost": {
                                                             "type": "string",
                                                             "format": "at-uri",
+                                                            "description": "Repost uri for repost type.",
                                                             "example": "at://did:plc:1234abcd/app.bsky.feed.repost/record123"
                                                         }
                                                     },
                                                     "required": [
-                                                        "repost"
+                                                        "$type"
                                                     ],
                                                     "description": "Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported."
                                                 }
@@ -899,21 +939,7 @@
                                         "example": "at://did:plc:1234abcd/app.bsky.feed.generator/record123"
                                     },
                                     "post": {
-                                        "type": "object",
-                                        "properties": {
-                                            "uri": {
-                                                "type": "string",
-                                                "format": "at-uri",
-                                                "example": "at://did:plc:1234abcd/app.bsky.feed.post/record123"
-                                            },
-                                            "indexedAt": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            }
-                                        },
-                                        "required": [
-                                            "uri"
-                                        ]
+                                        "$ref": "#/components/schemas/removePostPostParam"
                                     }
                                 },
                                 "required": [

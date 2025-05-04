@@ -17,29 +17,53 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for AddPostReasonParamType.
+const (
+	AppBskyFeedDefsSkeletonReasonPin    AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonPin"
+	AppBskyFeedDefsSkeletonReasonRepost AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonRepost"
+)
+
 // Defines values for PostUpdateDocumentJSONBodyType.
 const (
 	PrivacyPolicy PostUpdateDocumentJSONBodyType = "privacy_policy"
 	Tos           PostUpdateDocumentJSONBodyType = "tos"
 )
 
+// AddPostPostParam defines model for AddPostPostParam.
+type AddPostPostParam struct {
+	Cid string `json:"cid"`
+
+	// FeedContext Context passed through to the client and feed generator.
+	FeedContext *string    `json:"feedContext,omitempty"`
+	IndexedAt   *time.Time `json:"indexedAt,omitempty"`
+	Languages   *[]string  `json:"languages"`
+
+	// Reason Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
+	Reason *AddPostReasonParam `json:"reason,omitempty"`
+	Uri    string              `json:"uri"`
+}
+
+// AddPostReasonParam Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
+type AddPostReasonParam struct {
+	Type AddPostReasonParamType `json:"$type"`
+
+	// Repost Repost uri for repost type.
+	Repost *string `json:"repost,omitempty"`
+}
+
+// AddPostReasonParamType defines model for AddPostReasonParam.Type.
+type AddPostReasonParamType string
+
+// RemovePostPostParam defines model for removePostPostParam.
+type RemovePostPostParam struct {
+	IndexedAt *time.Time `json:"indexedAt,omitempty"`
+	Uri       string     `json:"uri"`
+}
+
 // PostAddPostJSONBody defines parameters for PostAddPost.
 type PostAddPostJSONBody struct {
-	Feed string `json:"feed"`
-	Post struct {
-		Cid string `json:"cid"`
-
-		// FeedContext Context passed through to the client and feed generator.
-		FeedContext *string    `json:"feedContext,omitempty"`
-		IndexedAt   *time.Time `json:"indexedAt,omitempty"`
-		Languages   *[]string  `json:"languages"`
-
-		// Reason Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
-		Reason *struct {
-			Repost string `json:"repost"`
-		} `json:"reason,omitempty"`
-		Uri string `json:"uri"`
-	} `json:"post"`
+	Feed string           `json:"feed"`
+	Post AddPostPostParam `json:"post"`
 }
 
 // GetGetPostsParams defines parameters for GetGetPosts.
@@ -58,11 +82,8 @@ type PostRegisterFeedJSONBody struct {
 
 // PostRemovePostJSONBody defines parameters for PostRemovePost.
 type PostRemovePostJSONBody struct {
-	Feed string `json:"feed"`
-	Post struct {
-		IndexedAt *time.Time `json:"indexedAt,omitempty"`
-		Uri       string     `json:"uri"`
-	} `json:"post"`
+	Feed string              `json:"feed"`
+	Post RemovePostPostParam `json:"post"`
 }
 
 // PostTrimFeedJSONBody defines parameters for PostTrimFeed.
@@ -953,7 +974,10 @@ type PostAddPostResponse struct {
 
 			// Reason Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
 			Reason *struct {
-				Repost string `json:"repost"`
+				Type PostAddPost200PostReasonType `json:"$type"`
+
+				// Repost Repost uri for repost type.
+				Repost *string `json:"repost,omitempty"`
 			} `json:"reason,omitempty"`
 			Uri string `json:"uri"`
 		} `json:"post"`
@@ -971,6 +995,7 @@ type PostAddPostResponse struct {
 		Message *string             `json:"message,omitempty"`
 	}
 }
+type PostAddPost200PostReasonType string
 type PostAddPost400Error string
 type PostAddPost404Error string
 type PostAddPost500Error string
@@ -1515,7 +1540,10 @@ func ParsePostAddPostResponse(rsp *http.Response) (*PostAddPostResponse, error) 
 
 				// Reason Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
 				Reason *struct {
-					Repost string `json:"repost"`
+					Type PostAddPost200PostReasonType `json:"$type"`
+
+					// Repost Repost uri for repost type.
+					Repost *string `json:"repost,omitempty"`
 				} `json:"reason,omitempty"`
 				Uri string `json:"uri"`
 			} `json:"post"`
