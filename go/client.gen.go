@@ -1037,12 +1037,17 @@ type GetGetPostsResponse struct {
 		Error   GetGetPosts400Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
 	}
+	JSON404 *struct {
+		Error   GetGetPosts404Error `json:"error"`
+		Message *string             `json:"message,omitempty"`
+	}
 	JSON500 *struct {
 		Error   GetGetPosts500Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
 	}
 }
 type GetGetPosts400Error string
+type GetGetPosts404Error string
 type GetGetPosts500Error string
 
 // Status returns HTTPResponse.Status
@@ -1631,6 +1636,16 @@ func ParseGetGetPostsResponse(rsp *http.Response) (*GetGetPostsResponse, error) 
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest struct {
+			Error   GetGetPosts404Error `json:"error"`
+			Message *string             `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {

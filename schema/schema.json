@@ -389,7 +389,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Unknown Feed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -398,12 +398,12 @@
                                         "error": {
                                             "type": "string",
                                             "enum": [
-                                                "NotFound"
+                                                "UnknownFeed"
                                             ]
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "The requested resource was not found"
+                                            "example": "Feed with URI {feedUri} does not exist."
                                         }
                                     },
                                     "required": [
@@ -673,7 +673,7 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Unknown Feed",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -682,12 +682,12 @@
                                         "error": {
                                             "type": "string",
                                             "enum": [
-                                                "NotFound"
+                                                "UnknownFeed"
                                             ]
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "The requested resource was not found"
+                                            "example": "Feed with URI {feedUri} does not exist."
                                         }
                                     },
                                     "required": [
@@ -1179,6 +1179,31 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unknown Feed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "UnknownFeed"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Feed with URI {feedUri} does not exist."
                                         }
                                     },
                                     "required": [
