@@ -1,10 +1,22 @@
 {
     "openapi": "3.0.3",
     "info": {
-        "version": "1.0.0",
-        "title": "OpenAPI"
+        "title": "Gyoka API",
+        "version": "1.0.0"
     },
+    "security": [
+        {
+            "ApiKeyAuth": []
+        }
+    ],
     "components": {
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key"
+            }
+        },
         "schemas": {
             "AddPostReasonParam": {
                 "type": "object",
@@ -132,6 +144,31 @@
                                     },
                                     "required": [
                                         "feeds"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
                                     ]
                                 }
                             }
@@ -265,6 +302,31 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "409": {
                         "description": "Conflict",
                         "content": {
@@ -379,6 +441,31 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
                                         }
                                     },
                                     "required": [
@@ -539,6 +626,31 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Unknown Feed",
                         "content": {
@@ -663,6 +775,31 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
                                         }
                                     },
                                     "required": [
@@ -867,6 +1004,31 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Unknown Feed",
                         "content": {
@@ -985,6 +1147,31 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
                                         }
                                     },
                                     "required": [
@@ -1188,6 +1375,31 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Unknown Feed",
                         "content": {
@@ -1262,6 +1474,31 @@
                                     },
                                     "required": [
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
                                     ]
                                 }
                             }
@@ -1382,6 +1619,31 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The request could not be understood or was missing required parameters"
+                                        }
+                                    },
+                                    "required": [
+                                        "error"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Unauthorized"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentication credentials were missing or invalid."
                                         }
                                     },
                                     "required": [

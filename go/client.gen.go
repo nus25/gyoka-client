@@ -17,6 +17,10 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+const (
+	ApiKeyAuthScopes = "ApiKeyAuth.Scopes"
+)
+
 // Defines values for AddPostReasonParamType.
 const (
 	AppBskyFeedDefsSkeletonReasonPin    AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonPin"
@@ -986,6 +990,10 @@ type PostAddPostResponse struct {
 		Error   PostAddPost400Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostAddPost401Error `json:"error"`
+		Message *string             `json:"message,omitempty"`
+	}
 	JSON404 *struct {
 		Error   PostAddPost404Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
@@ -997,6 +1005,7 @@ type PostAddPostResponse struct {
 }
 type PostAddPost200PostReasonType string
 type PostAddPost400Error string
+type PostAddPost401Error string
 type PostAddPost404Error string
 type PostAddPost500Error string
 
@@ -1037,6 +1046,10 @@ type GetGetPostsResponse struct {
 		Error   GetGetPosts400Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   GetGetPosts401Error `json:"error"`
+		Message *string             `json:"message,omitempty"`
+	}
 	JSON404 *struct {
 		Error   GetGetPosts404Error `json:"error"`
 		Message *string             `json:"message,omitempty"`
@@ -1047,6 +1060,7 @@ type GetGetPostsResponse struct {
 	}
 }
 type GetGetPosts400Error string
+type GetGetPosts401Error string
 type GetGetPosts404Error string
 type GetGetPosts500Error string
 
@@ -1076,11 +1090,16 @@ type GetListFeedsResponse struct {
 			Uri        string `json:"uri"`
 		} `json:"feeds"`
 	}
+	JSON401 *struct {
+		Error   GetListFeeds401Error `json:"error"`
+		Message *string              `json:"message,omitempty"`
+	}
 	JSON500 *struct {
 		Error   GetListFeeds500Error `json:"error"`
 		Message *string              `json:"message,omitempty"`
 	}
 }
+type GetListFeeds401Error string
 type GetListFeeds500Error string
 
 // Status returns HTTPResponse.Status
@@ -1114,6 +1133,10 @@ type PostRegisterFeedResponse struct {
 		Error   PostRegisterFeed400Error `json:"error"`
 		Message *string                  `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostRegisterFeed401Error `json:"error"`
+		Message *string                  `json:"message,omitempty"`
+	}
 	JSON409 *struct {
 		Error   PostRegisterFeed409Error `json:"error"`
 		Message string                   `json:"message"`
@@ -1124,6 +1147,7 @@ type PostRegisterFeedResponse struct {
 	}
 }
 type PostRegisterFeed400Error string
+type PostRegisterFeed401Error string
 type PostRegisterFeed409Error string
 type PostRegisterFeed500Error string
 
@@ -1153,6 +1177,10 @@ type PostRemovePostResponse struct {
 		Error   PostRemovePost400Error `json:"error"`
 		Message *string                `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostRemovePost401Error `json:"error"`
+		Message *string                `json:"message,omitempty"`
+	}
 	JSON404 *struct {
 		Error   PostRemovePost404Error `json:"error"`
 		Message *string                `json:"message,omitempty"`
@@ -1163,6 +1191,7 @@ type PostRemovePostResponse struct {
 	}
 }
 type PostRemovePost400Error string
+type PostRemovePost401Error string
 type PostRemovePost404Error string
 type PostRemovePost500Error string
 
@@ -1193,6 +1222,10 @@ type PostTrimFeedResponse struct {
 		Error   PostTrimFeed400Error `json:"error"`
 		Message *string              `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostTrimFeed401Error `json:"error"`
+		Message *string              `json:"message,omitempty"`
+	}
 	JSON404 *struct {
 		Error   PostTrimFeed404Error `json:"error"`
 		Message *string              `json:"message,omitempty"`
@@ -1203,6 +1236,7 @@ type PostTrimFeedResponse struct {
 	}
 }
 type PostTrimFeed400Error string
+type PostTrimFeed401Error string
 type PostTrimFeed404Error string
 type PostTrimFeed500Error string
 
@@ -1232,6 +1266,10 @@ type PostUnregisterFeedResponse struct {
 		Error   PostUnregisterFeed400Error `json:"error"`
 		Message *string                    `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostUnregisterFeed401Error `json:"error"`
+		Message *string                    `json:"message,omitempty"`
+	}
 	JSON404 *struct {
 		Error   PostUnregisterFeed404Error `json:"error"`
 		Message *string                    `json:"message,omitempty"`
@@ -1242,6 +1280,7 @@ type PostUnregisterFeedResponse struct {
 	}
 }
 type PostUnregisterFeed400Error string
+type PostUnregisterFeed401Error string
 type PostUnregisterFeed404Error string
 type PostUnregisterFeed500Error string
 
@@ -1276,6 +1315,10 @@ type PostUpdateFeedResponse struct {
 		Error   PostUpdateFeed400Error `json:"error"`
 		Message *string                `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostUpdateFeed401Error `json:"error"`
+		Message *string                `json:"message,omitempty"`
+	}
 	JSON404 *struct {
 		Error   PostUpdateFeed404Error `json:"error"`
 		Message *string                `json:"message,omitempty"`
@@ -1286,6 +1329,7 @@ type PostUpdateFeedResponse struct {
 	}
 }
 type PostUpdateFeed400Error string
+type PostUpdateFeed401Error string
 type PostUpdateFeed404Error string
 type PostUpdateFeed500Error string
 
@@ -1311,11 +1355,16 @@ type GetPingResponse struct {
 	JSON200      *struct {
 		Message string `json:"message"`
 	}
+	JSON401 *struct {
+		Error   GetPing401Error `json:"error"`
+		Message *string         `json:"message,omitempty"`
+	}
 	JSON500 *struct {
 		Error   GetPing500Error `json:"error"`
 		Message *string         `json:"message,omitempty"`
 	}
 }
+type GetPing401Error string
 type GetPing500Error string
 
 // Status returns HTTPResponse.Status
@@ -1346,6 +1395,10 @@ type PostUpdateDocumentResponse struct {
 		Error   PostUpdateDocument400Error `json:"error"`
 		Message *string                    `json:"message,omitempty"`
 	}
+	JSON401 *struct {
+		Error   PostUpdateDocument401Error `json:"error"`
+		Message *string                    `json:"message,omitempty"`
+	}
 	JSON500 *struct {
 		Error   PostUpdateDocument500Error `json:"error"`
 		Message *string                    `json:"message,omitempty"`
@@ -1353,6 +1406,7 @@ type PostUpdateDocumentResponse struct {
 }
 type PostUpdateDocument200Type string
 type PostUpdateDocument400Error string
+type PostUpdateDocument401Error string
 type PostUpdateDocument500Error string
 
 // Status returns HTTPResponse.Status
@@ -1568,6 +1622,16 @@ func ParsePostAddPostResponse(rsp *http.Response) (*PostAddPostResponse, error) 
 		}
 		response.JSON400 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostAddPost401Error `json:"error"`
+			Message *string             `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest struct {
 			Error   PostAddPost404Error `json:"error"`
@@ -1637,6 +1701,16 @@ func ParseGetGetPostsResponse(rsp *http.Response) (*GetGetPostsResponse, error) 
 		}
 		response.JSON400 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   GetGetPosts401Error `json:"error"`
+			Message *string             `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest struct {
 			Error   GetGetPosts404Error `json:"error"`
@@ -1688,6 +1762,16 @@ func ParseGetListFeedsResponse(rsp *http.Response) (*GetListFeedsResponse, error
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   GetListFeeds401Error `json:"error"`
+			Message *string              `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
@@ -1741,6 +1825,16 @@ func ParsePostRegisterFeedResponse(rsp *http.Response) (*PostRegisterFeedRespons
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostRegisterFeed401Error `json:"error"`
+			Message *string                  `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest struct {
@@ -1799,6 +1893,16 @@ func ParsePostRemovePostResponse(rsp *http.Response) (*PostRemovePostResponse, e
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostRemovePost401Error `json:"error"`
+			Message *string                `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest struct {
@@ -1859,6 +1963,16 @@ func ParsePostTrimFeedResponse(rsp *http.Response) (*PostTrimFeedResponse, error
 		}
 		response.JSON400 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostTrimFeed401Error `json:"error"`
+			Message *string              `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest struct {
 			Error   PostTrimFeed404Error `json:"error"`
@@ -1916,6 +2030,16 @@ func ParsePostUnregisterFeedResponse(rsp *http.Response) (*PostUnregisterFeedRes
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostUnregisterFeed401Error `json:"error"`
+			Message *string                    `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest struct {
@@ -1980,6 +2104,16 @@ func ParsePostUpdateFeedResponse(rsp *http.Response) (*PostUpdateFeedResponse, e
 		}
 		response.JSON400 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostUpdateFeed401Error `json:"error"`
+			Message *string                `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest struct {
 			Error   PostUpdateFeed404Error `json:"error"`
@@ -2027,6 +2161,16 @@ func ParseGetPingResponse(rsp *http.Response) (*GetPingResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   GetPing401Error `json:"error"`
+			Message *string         `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
@@ -2077,6 +2221,16 @@ func ParsePostUpdateDocumentResponse(rsp *http.Response) (*PostUpdateDocumentRes
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostUpdateDocument401Error `json:"error"`
+			Message *string                    `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {

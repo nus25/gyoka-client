@@ -30,8 +30,11 @@ func main() {
 		DisableCompression:  false,
 		DisableKeepAlives:   false,
 	}
-	// custom headers for Cloudflare zerotrust service token
+	// custom headers for auth(if configured)
 	ch := make(map[string]string)
+	// gyoka API key
+	ch["X-API-Key"] = "your-api-key"
+	// Cloudflare zerotrust service token
 	ch["CF-Access-Client-Id"] = "your-client-id"
 	ch["CF-Access-Client-Secret"] = "your-client-secret"
 	hc := &http.Client{
