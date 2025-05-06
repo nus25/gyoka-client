@@ -1,7 +1,7 @@
 package main
 
-// Sample usage of this client.
-// go run cmd/index.go
+// Example code for using this client.
+// go run examples/index.go
 import (
 	"context"
 	"fmt"
