@@ -60,7 +60,7 @@ func main() {
 			Languages: &[]string{"en"},
 			IndexedAt: &indexedAt,
 			Reason: &client.AddPostReasonParam{
-				Type:   client.AppBskyFeedDefsSkeletonReasonRepost,
+				Type:   client.AddPostReasonParamTypeAppBskyFeedDefsSkeletonReasonRepost,
 				Repost: &repostUri,
 			},
 		},

@@ -23,8 +23,14 @@ const (
 
 // Defines values for AddPostReasonParamType.
 const (
-	AppBskyFeedDefsSkeletonReasonPin    AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonPin"
-	AppBskyFeedDefsSkeletonReasonRepost AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonRepost"
+	AddPostReasonParamTypeAppBskyFeedDefsSkeletonReasonPin    AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonPin"
+	AddPostReasonParamTypeAppBskyFeedDefsSkeletonReasonRepost AddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonRepost"
+)
+
+// Defines values for BatchAddPostReasonParamType.
+const (
+	BatchAddPostReasonParamTypeAppBskyFeedDefsSkeletonReasonPin    BatchAddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonPin"
+	BatchAddPostReasonParamTypeAppBskyFeedDefsSkeletonReasonRepost BatchAddPostReasonParamType = "app.bsky.feed.defs#skeletonReasonRepost"
 )
 
 // Defines values for PostUpdateDocumentJSONBodyType.
@@ -58,6 +64,37 @@ type AddPostReasonParam struct {
 // AddPostReasonParamType defines model for AddPostReasonParam.Type.
 type AddPostReasonParamType string
 
+// BatchAddPostPostParam defines model for BatchAddPostPostParam.
+type BatchAddPostPostParam struct {
+	Cid string `json:"cid"`
+
+	// FeedContext Context passed through to the client and feed generator.
+	FeedContext *string    `json:"feedContext,omitempty"`
+	IndexedAt   *time.Time `json:"indexedAt,omitempty"`
+	Languages   *[]string  `json:"languages"`
+
+	// Reason Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
+	Reason *BatchAddPostReasonParam `json:"reason,omitempty"`
+	Uri    string                   `json:"uri"`
+}
+
+// BatchAddPostReasonParam Reason for including the post in the feed skeleton. Currently only 'repost' reason is supported.
+type BatchAddPostReasonParam struct {
+	Type BatchAddPostReasonParamType `json:"$type"`
+
+	// Repost Repost uri for repost type.
+	Repost *string `json:"repost,omitempty"`
+}
+
+// BatchAddPostReasonParamType defines model for BatchAddPostReasonParam.Type.
+type BatchAddPostReasonParamType string
+
+// BatchAddPostsEntriesParam defines model for BatchAddPostsEntriesParam.
+type BatchAddPostsEntriesParam = []struct {
+	Feed  string                  `json:"feed"`
+	Posts []BatchAddPostPostParam `json:"posts"`
+}
+
 // RemovePostPostParam defines model for removePostPostParam.
 type RemovePostPostParam struct {
 	IndexedAt *time.Time `json:"indexedAt,omitempty"`
@@ -68,6 +105,11 @@ type RemovePostPostParam struct {
 type PostAddPostJSONBody struct {
 	Feed string           `json:"feed"`
 	Post AddPostPostParam `json:"post"`
+}
+
+// PostBatchAddPostsJSONBody defines parameters for PostBatchAddPosts.
+type PostBatchAddPostsJSONBody struct {
+	Entries BatchAddPostsEntriesParam `json:"entries"`
 }
 
 // GetGetPostsParams defines parameters for GetGetPosts.
@@ -88,6 +130,12 @@ type PostRegisterFeedJSONBody struct {
 type PostRemovePostJSONBody struct {
 	Feed string              `json:"feed"`
 	Post RemovePostPostParam `json:"post"`
+}
+
+// PostRemovePostByAuthorJSONBody defines parameters for PostRemovePostByAuthor.
+type PostRemovePostByAuthorJSONBody struct {
+	Author string `json:"author"`
+	Feed   string `json:"feed"`
 }
 
 // PostTrimFeedJSONBody defines parameters for PostTrimFeed.
@@ -123,11 +171,17 @@ type PostUpdateDocumentJSONBodyType string
 // PostAddPostJSONRequestBody defines body for PostAddPost for application/json ContentType.
 type PostAddPostJSONRequestBody PostAddPostJSONBody
 
+// PostBatchAddPostsJSONRequestBody defines body for PostBatchAddPosts for application/json ContentType.
+type PostBatchAddPostsJSONRequestBody PostBatchAddPostsJSONBody
+
 // PostRegisterFeedJSONRequestBody defines body for PostRegisterFeed for application/json ContentType.
 type PostRegisterFeedJSONRequestBody PostRegisterFeedJSONBody
 
 // PostRemovePostJSONRequestBody defines body for PostRemovePost for application/json ContentType.
 type PostRemovePostJSONRequestBody PostRemovePostJSONBody
+
+// PostRemovePostByAuthorJSONRequestBody defines body for PostRemovePostByAuthor for application/json ContentType.
+type PostRemovePostByAuthorJSONRequestBody PostRemovePostByAuthorJSONBody
 
 // PostTrimFeedJSONRequestBody defines body for PostTrimFeed for application/json ContentType.
 type PostTrimFeedJSONRequestBody PostTrimFeedJSONBody
@@ -219,6 +273,11 @@ type ClientInterface interface {
 
 	PostAddPost(ctx context.Context, body PostAddPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostBatchAddPostsWithBody request with any body
+	PostBatchAddPostsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostBatchAddPosts(ctx context.Context, body PostBatchAddPostsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetGetPosts request
 	GetGetPosts(ctx context.Context, params *GetGetPostsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -234,6 +293,11 @@ type ClientInterface interface {
 	PostRemovePostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostRemovePost(ctx context.Context, body PostRemovePostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostRemovePostByAuthorWithBody request with any body
+	PostRemovePostByAuthorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostRemovePostByAuthor(ctx context.Context, body PostRemovePostByAuthorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostTrimFeedWithBody request with any body
 	PostTrimFeedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -273,6 +337,30 @@ func (c *Client) PostAddPostWithBody(ctx context.Context, contentType string, bo
 
 func (c *Client) PostAddPost(ctx context.Context, body PostAddPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostAddPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostBatchAddPostsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostBatchAddPostsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostBatchAddPosts(ctx context.Context, body PostBatchAddPostsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostBatchAddPostsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -345,6 +433,30 @@ func (c *Client) PostRemovePostWithBody(ctx context.Context, contentType string,
 
 func (c *Client) PostRemovePost(ctx context.Context, body PostRemovePostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostRemovePostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostRemovePostByAuthorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostRemovePostByAuthorRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostRemovePostByAuthor(ctx context.Context, body PostRemovePostByAuthorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostRemovePostByAuthorRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -484,6 +596,46 @@ func NewPostAddPostRequestWithBody(server string, contentType string, body io.Re
 	}
 
 	operationPath := fmt.Sprintf("/api/feed/addPost")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostBatchAddPostsRequest calls the generic PostBatchAddPosts builder with application/json body
+func NewPostBatchAddPostsRequest(server string, body PostBatchAddPostsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostBatchAddPostsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostBatchAddPostsRequestWithBody generates requests for PostBatchAddPosts with any type of body
+func NewPostBatchAddPostsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/feed/batchAddPosts")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -668,6 +820,46 @@ func NewPostRemovePostRequestWithBody(server string, contentType string, body io
 	}
 
 	operationPath := fmt.Sprintf("/api/feed/removePost")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostRemovePostByAuthorRequest calls the generic PostRemovePostByAuthor builder with application/json body
+func NewPostRemovePostByAuthorRequest(server string, body PostRemovePostByAuthorJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostRemovePostByAuthorRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostRemovePostByAuthorRequestWithBody generates requests for PostRemovePostByAuthor with any type of body
+func NewPostRemovePostByAuthorRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/feed/removePostByAuthor")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -922,6 +1114,11 @@ type ClientWithResponsesInterface interface {
 
 	PostAddPostWithResponse(ctx context.Context, body PostAddPostJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAddPostResponse, error)
 
+	// PostBatchAddPostsWithBodyWithResponse request with any body
+	PostBatchAddPostsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostBatchAddPostsResponse, error)
+
+	PostBatchAddPostsWithResponse(ctx context.Context, body PostBatchAddPostsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBatchAddPostsResponse, error)
+
 	// GetGetPostsWithResponse request
 	GetGetPostsWithResponse(ctx context.Context, params *GetGetPostsParams, reqEditors ...RequestEditorFn) (*GetGetPostsResponse, error)
 
@@ -937,6 +1134,11 @@ type ClientWithResponsesInterface interface {
 	PostRemovePostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostRemovePostResponse, error)
 
 	PostRemovePostWithResponse(ctx context.Context, body PostRemovePostJSONRequestBody, reqEditors ...RequestEditorFn) (*PostRemovePostResponse, error)
+
+	// PostRemovePostByAuthorWithBodyWithResponse request with any body
+	PostRemovePostByAuthorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostRemovePostByAuthorResponse, error)
+
+	PostRemovePostByAuthorWithResponse(ctx context.Context, body PostRemovePostByAuthorJSONRequestBody, reqEditors ...RequestEditorFn) (*PostRemovePostByAuthorResponse, error)
 
 	// PostTrimFeedWithBodyWithResponse request with any body
 	PostTrimFeedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTrimFeedResponse, error)
@@ -1019,6 +1221,58 @@ func (r PostAddPostResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostAddPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostBatchAddPostsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Results []struct {
+			Feed    string `json:"feed"`
+			Results []struct {
+				Error  *string                                  `json:"error,omitempty"`
+				Status PostBatchAddPosts200ResultsResultsStatus `json:"status"`
+				Uri    string                                   `json:"uri"`
+			} `json:"results"`
+		} `json:"results"`
+	}
+	JSON400 *struct {
+		Error   PostBatchAddPosts400Error `json:"error"`
+		Message *string                   `json:"message,omitempty"`
+	}
+	JSON401 *struct {
+		Error   PostBatchAddPosts401Error `json:"error"`
+		Message *string                   `json:"message,omitempty"`
+	}
+	JSON404 *struct {
+		Error   PostBatchAddPosts404Error `json:"error"`
+		Message *string                   `json:"message,omitempty"`
+	}
+	JSON500 *struct {
+		Error   PostBatchAddPosts500Error `json:"error"`
+		Message *string                   `json:"message,omitempty"`
+	}
+}
+type PostBatchAddPosts200ResultsResultsStatus string
+type PostBatchAddPosts400Error string
+type PostBatchAddPosts401Error string
+type PostBatchAddPosts404Error string
+type PostBatchAddPosts500Error string
+
+// Status returns HTTPResponse.Status
+func (r PostBatchAddPostsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostBatchAddPostsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1171,7 +1425,12 @@ type PostRemovePostResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
+		Feed    string `json:"feed"`
 		Message string `json:"message"`
+		Post    struct {
+			IndexedAt time.Time `json:"indexedAt"`
+			Uri       string    `json:"uri"`
+		} `json:"post"`
 	}
 	JSON400 *struct {
 		Error   PostRemovePost400Error `json:"error"`
@@ -1211,11 +1470,59 @@ func (r PostRemovePostResponse) StatusCode() int {
 	return 0
 }
 
+type PostRemovePostByAuthorResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Author       string `json:"author"`
+		DeletedCount int    `json:"deletedCount"`
+		Feed         string `json:"feed"`
+		Message      string `json:"message"`
+	}
+	JSON400 *struct {
+		Error   PostRemovePostByAuthor400Error `json:"error"`
+		Message *string                        `json:"message,omitempty"`
+	}
+	JSON401 *struct {
+		Error   PostRemovePostByAuthor401Error `json:"error"`
+		Message *string                        `json:"message,omitempty"`
+	}
+	JSON404 *struct {
+		Error   PostRemovePostByAuthor404Error `json:"error"`
+		Message *string                        `json:"message,omitempty"`
+	}
+	JSON500 *struct {
+		Error   PostRemovePostByAuthor500Error `json:"error"`
+		Message *string                        `json:"message,omitempty"`
+	}
+}
+type PostRemovePostByAuthor400Error string
+type PostRemovePostByAuthor401Error string
+type PostRemovePostByAuthor404Error string
+type PostRemovePostByAuthor500Error string
+
+// Status returns HTTPResponse.Status
+func (r PostRemovePostByAuthorResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostRemovePostByAuthorResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostTrimFeedResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		DeletedCount float32 `json:"deletedCount"`
+		Feed         string  `json:"feed"`
 		Message      string  `json:"message"`
 	}
 	JSON400 *struct {
@@ -1442,6 +1749,23 @@ func (c *ClientWithResponses) PostAddPostWithResponse(ctx context.Context, body 
 	return ParsePostAddPostResponse(rsp)
 }
 
+// PostBatchAddPostsWithBodyWithResponse request with arbitrary body returning *PostBatchAddPostsResponse
+func (c *ClientWithResponses) PostBatchAddPostsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostBatchAddPostsResponse, error) {
+	rsp, err := c.PostBatchAddPostsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostBatchAddPostsResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostBatchAddPostsWithResponse(ctx context.Context, body PostBatchAddPostsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBatchAddPostsResponse, error) {
+	rsp, err := c.PostBatchAddPosts(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostBatchAddPostsResponse(rsp)
+}
+
 // GetGetPostsWithResponse request returning *GetGetPostsResponse
 func (c *ClientWithResponses) GetGetPostsWithResponse(ctx context.Context, params *GetGetPostsParams, reqEditors ...RequestEditorFn) (*GetGetPostsResponse, error) {
 	rsp, err := c.GetGetPosts(ctx, params, reqEditors...)
@@ -1492,6 +1816,23 @@ func (c *ClientWithResponses) PostRemovePostWithResponse(ctx context.Context, bo
 		return nil, err
 	}
 	return ParsePostRemovePostResponse(rsp)
+}
+
+// PostRemovePostByAuthorWithBodyWithResponse request with arbitrary body returning *PostRemovePostByAuthorResponse
+func (c *ClientWithResponses) PostRemovePostByAuthorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostRemovePostByAuthorResponse, error) {
+	rsp, err := c.PostRemovePostByAuthorWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostRemovePostByAuthorResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostRemovePostByAuthorWithResponse(ctx context.Context, body PostRemovePostByAuthorJSONRequestBody, reqEditors ...RequestEditorFn) (*PostRemovePostByAuthorResponse, error) {
+	rsp, err := c.PostRemovePostByAuthor(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostRemovePostByAuthorResponse(rsp)
 }
 
 // PostTrimFeedWithBodyWithResponse request with arbitrary body returning *PostTrimFeedResponse
@@ -1646,6 +1987,81 @@ func ParsePostAddPostResponse(rsp *http.Response) (*PostAddPostResponse, error) 
 		var dest struct {
 			Error   PostAddPost500Error `json:"error"`
 			Message *string             `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostBatchAddPostsResponse parses an HTTP response from a PostBatchAddPostsWithResponse call
+func ParsePostBatchAddPostsResponse(rsp *http.Response) (*PostBatchAddPostsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostBatchAddPostsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Results []struct {
+				Feed    string `json:"feed"`
+				Results []struct {
+					Error  *string                                  `json:"error,omitempty"`
+					Status PostBatchAddPosts200ResultsResultsStatus `json:"status"`
+					Uri    string                                   `json:"uri"`
+				} `json:"results"`
+			} `json:"results"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest struct {
+			Error   PostBatchAddPosts400Error `json:"error"`
+			Message *string                   `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostBatchAddPosts401Error `json:"error"`
+			Message *string                   `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest struct {
+			Error   PostBatchAddPosts404Error `json:"error"`
+			Message *string                   `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest struct {
+			Error   PostBatchAddPosts500Error `json:"error"`
+			Message *string                   `json:"message,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -1877,7 +2293,12 @@ func ParsePostRemovePostResponse(rsp *http.Response) (*PostRemovePostResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
+			Feed    string `json:"feed"`
 			Message string `json:"message"`
+			Post    struct {
+				IndexedAt time.Time `json:"indexedAt"`
+				Uri       string    `json:"uri"`
+			} `json:"post"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -1929,6 +2350,77 @@ func ParsePostRemovePostResponse(rsp *http.Response) (*PostRemovePostResponse, e
 	return response, nil
 }
 
+// ParsePostRemovePostByAuthorResponse parses an HTTP response from a PostRemovePostByAuthorWithResponse call
+func ParsePostRemovePostByAuthorResponse(rsp *http.Response) (*PostRemovePostByAuthorResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostRemovePostByAuthorResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Author       string `json:"author"`
+			DeletedCount int    `json:"deletedCount"`
+			Feed         string `json:"feed"`
+			Message      string `json:"message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest struct {
+			Error   PostRemovePostByAuthor400Error `json:"error"`
+			Message *string                        `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest struct {
+			Error   PostRemovePostByAuthor401Error `json:"error"`
+			Message *string                        `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest struct {
+			Error   PostRemovePostByAuthor404Error `json:"error"`
+			Message *string                        `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest struct {
+			Error   PostRemovePostByAuthor500Error `json:"error"`
+			Message *string                        `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostTrimFeedResponse parses an HTTP response from a PostTrimFeedWithResponse call
 func ParsePostTrimFeedResponse(rsp *http.Response) (*PostTrimFeedResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1946,6 +2438,7 @@ func ParsePostTrimFeedResponse(rsp *http.Response) (*PostTrimFeedResponse, error
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
 			DeletedCount float32 `json:"deletedCount"`
+			Feed         string  `json:"feed"`
 			Message      string  `json:"message"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
