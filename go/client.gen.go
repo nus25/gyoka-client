@@ -1539,7 +1539,7 @@ type PostRegisterFeedResponse struct {
 	}
 	JSON409 *struct {
 		Error   PostRegisterFeed409Error `json:"error"`
-		Message string                   `json:"message"`
+		Message *string                  `json:"message,omitempty"`
 	}
 	JSON500 *struct {
 		Error   PostRegisterFeed500Error `json:"error"`
@@ -2493,7 +2493,7 @@ func ParsePostRegisterFeedResponse(rsp *http.Response) (*PostRegisterFeedRespons
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
 		var dest struct {
 			Error   PostRegisterFeed409Error `json:"error"`
-			Message string                   `json:"message"`
+			Message *string                  `json:"message,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
