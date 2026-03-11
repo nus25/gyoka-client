@@ -1342,10 +1342,6 @@ type PostBatchAddPostsResponse struct {
 		Error   PostBatchAddPosts401Error `json:"error"`
 		Message *string                   `json:"message,omitempty"`
 	}
-	JSON404 *struct {
-		Error   PostBatchAddPosts404Error `json:"error"`
-		Message *string                   `json:"message,omitempty"`
-	}
 	JSON500 *struct {
 		Error   PostBatchAddPosts500Error `json:"error"`
 		Message *string                   `json:"message,omitempty"`
@@ -1354,7 +1350,6 @@ type PostBatchAddPostsResponse struct {
 type PostBatchAddPosts200ResultsResultsStatus string
 type PostBatchAddPosts400Error string
 type PostBatchAddPosts401Error string
-type PostBatchAddPosts404Error string
 type PostBatchAddPosts500Error string
 
 // Status returns HTTPResponse.Status
@@ -1394,10 +1389,6 @@ type PostBatchRemovePostsResponse struct {
 		Error   PostBatchRemovePosts401Error `json:"error"`
 		Message *string                      `json:"message,omitempty"`
 	}
-	JSON404 *struct {
-		Error   PostBatchRemovePosts404Error `json:"error"`
-		Message *string                      `json:"message,omitempty"`
-	}
 	JSON500 *struct {
 		Error   PostBatchRemovePosts500Error `json:"error"`
 		Message *string                      `json:"message,omitempty"`
@@ -1406,7 +1397,6 @@ type PostBatchRemovePostsResponse struct {
 type PostBatchRemovePosts200ResultsResultsStatus string
 type PostBatchRemovePosts400Error string
 type PostBatchRemovePosts401Error string
-type PostBatchRemovePosts404Error string
 type PostBatchRemovePosts500Error string
 
 // Status returns HTTPResponse.Status
@@ -1435,8 +1425,12 @@ type GetGetPostsResponse struct {
 			Cid         string    `json:"cid"`
 			FeedContext *string   `json:"feedContext,omitempty"`
 			IndexedAt   time.Time `json:"indexedAt"`
-			Langs       []string  `json:"langs"`
-			Reason      *struct {
+
+			// Langs Deprecated alias of languages. Use languages instead.
+			// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+			Langs     *[]string `json:"langs,omitempty"`
+			Languages []string  `json:"languages"`
+			Reason    *struct {
 				Repost string `json:"repost"`
 			} `json:"reason,omitempty"`
 			Uri string `json:"uri"`
@@ -2211,16 +2205,6 @@ func ParsePostBatchAddPostsResponse(rsp *http.Response) (*PostBatchAddPostsRespo
 		}
 		response.JSON401 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest struct {
-			Error   PostBatchAddPosts404Error `json:"error"`
-			Message *string                   `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
 			Error   PostBatchAddPosts500Error `json:"error"`
@@ -2286,16 +2270,6 @@ func ParsePostBatchRemovePostsResponse(rsp *http.Response) (*PostBatchRemovePost
 		}
 		response.JSON401 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest struct {
-			Error   PostBatchRemovePosts404Error `json:"error"`
-			Message *string                      `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
 			Error   PostBatchRemovePosts500Error `json:"error"`
@@ -2333,8 +2307,12 @@ func ParseGetGetPostsResponse(rsp *http.Response) (*GetGetPostsResponse, error) 
 				Cid         string    `json:"cid"`
 				FeedContext *string   `json:"feedContext,omitempty"`
 				IndexedAt   time.Time `json:"indexedAt"`
-				Langs       []string  `json:"langs"`
-				Reason      *struct {
+
+				// Langs Deprecated alias of languages. Use languages instead.
+				// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+				Langs     *[]string `json:"langs,omitempty"`
+				Languages []string  `json:"languages"`
+				Reason    *struct {
 					Repost string `json:"repost"`
 				} `json:"reason,omitempty"`
 				Uri string `json:"uri"`
