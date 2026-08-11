@@ -1,6 +1,6 @@
 # Gyoka editor client
 (experimental)
-Gyokaのフィードを操作するクライアントライブラリ。
+Gyoka Editor(OpenAPI版)のクライアントライブラリ。
 
 # Update Schema
 To update the OpenAPI schema to the latest version from GitHub:
