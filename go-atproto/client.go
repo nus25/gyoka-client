@@ -35,7 +35,7 @@ func newWithDirectory(ctx context.Context, host, identifier, appPassword string,
 
 	apiClient, err := atclient.LoginWithPassword(ctx, directory, atIdentifier, appPassword, "", nil)
 	if err != nil {
-		return nil, fmt.Errorf("log in with app password: %w", err)
+		return nil, fmt.Errorf("log in with app password: %w", normalizeAPIError(err))
 	}
 
 	return NewWithAPIClient(host, apiClient)
@@ -59,57 +59,57 @@ func NewWithAPIClient(host string, apiClient *atclient.APIClient) (*Client, erro
 }
 
 func (c *Client) Ping(ctx context.Context) (*gyoka.Ping_Output, error) {
-	return gyoka.Ping(ctx, c.lexClient)
+	return normalizeResult(gyoka.Ping(ctx, c.lexClient))
 }
 
 func (c *Client) AddPost(ctx context.Context, input *gyoka.FeedAddPost_Input) (*gyoka.FeedAddPost_Output, error) {
-	return gyoka.FeedAddPost(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedAddPost(ctx, c.lexClient, input))
 }
 
 func (c *Client) BatchAddPosts(ctx context.Context, input *gyoka.FeedBatchAddPosts_Input) (*gyoka.FeedBatchAddPosts_Output, error) {
-	return gyoka.FeedBatchAddPosts(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedBatchAddPosts(ctx, c.lexClient, input))
 }
 
 func (c *Client) BatchRemovePosts(ctx context.Context, input *gyoka.FeedBatchRemovePosts_Input) (*gyoka.FeedBatchRemovePosts_Output, error) {
-	return gyoka.FeedBatchRemovePosts(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedBatchRemovePosts(ctx, c.lexClient, input))
 }
 
 func (c *Client) GetPosts(ctx context.Context, cursor, feed string, limit int64) (*gyoka.FeedGetPosts_Output, error) {
-	return gyoka.FeedGetPosts(ctx, c.lexClient, cursor, feed, limit)
+	return normalizeResult(gyoka.FeedGetPosts(ctx, c.lexClient, cursor, feed, limit))
 }
 
 func (c *Client) ListFeeds(ctx context.Context) (*gyoka.FeedListFeeds_Output, error) {
-	return gyoka.FeedListFeeds(ctx, c.lexClient)
+	return normalizeResult(gyoka.FeedListFeeds(ctx, c.lexClient))
 }
 
 func (c *Client) RegisterFeed(ctx context.Context, input *gyoka.FeedRegisterFeed_Input) (*gyoka.FeedRegisterFeed_Output, error) {
-	return gyoka.FeedRegisterFeed(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedRegisterFeed(ctx, c.lexClient, input))
 }
 
 func (c *Client) RemovePost(ctx context.Context, input *gyoka.FeedRemovePost_Input) (*gyoka.FeedRemovePost_Output, error) {
-	return gyoka.FeedRemovePost(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedRemovePost(ctx, c.lexClient, input))
 }
 
 func (c *Client) RemovePostByAuthor(ctx context.Context, input *gyoka.FeedRemovePostByAuthor_Input) (*gyoka.FeedRemovePostByAuthor_Output, error) {
-	return gyoka.FeedRemovePostByAuthor(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedRemovePostByAuthor(ctx, c.lexClient, input))
 }
 
 func (c *Client) TrimFeed(ctx context.Context, input *gyoka.FeedTrimFeed_Input) (*gyoka.FeedTrimFeed_Output, error) {
-	return gyoka.FeedTrimFeed(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedTrimFeed(ctx, c.lexClient, input))
 }
 
 func (c *Client) UnregisterFeed(ctx context.Context, input *gyoka.FeedUnregisterFeed_Input) (*gyoka.FeedUnregisterFeed_Output, error) {
-	return gyoka.FeedUnregisterFeed(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedUnregisterFeed(ctx, c.lexClient, input))
 }
 
 func (c *Client) UpdateFeed(ctx context.Context, input *gyoka.FeedUpdateFeed_Input) (*gyoka.FeedUpdateFeed_Output, error) {
-	return gyoka.FeedUpdateFeed(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.FeedUpdateFeed(ctx, c.lexClient, input))
 }
 
 func (c *Client) GetDocument(ctx context.Context, docType string) (*gyoka.DocumentGetDocument_Output, error) {
-	return gyoka.DocumentGetDocument(ctx, c.lexClient, docType)
+	return normalizeResult(gyoka.DocumentGetDocument(ctx, c.lexClient, docType))
 }
 
 func (c *Client) UpdateDocument(ctx context.Context, input *gyoka.DocumentUpdateDocument_Input) (*gyoka.DocumentUpdateDocument_Output, error) {
-	return gyoka.DocumentUpdateDocument(ctx, c.lexClient, input)
+	return normalizeResult(gyoka.DocumentUpdateDocument(ctx, c.lexClient, input))
 }

@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/bluesky-social/indigo/atproto/atclient"
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	lexutil "github.com/bluesky-social/indigo/lex/util"
@@ -137,6 +138,76 @@ func TestPingPropagatesLexiconError(t *testing.T) {
 	_, err := client.Ping(context.Background())
 	if !errors.Is(err, want) {
 		t.Errorf("ping error = %v, want %v", err, want)
+	}
+}
+
+func TestPingReturnsAPIError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/xrpc/net.nusno.gyoka.ping" {
+			t.Errorf("request path = %q, want ping endpoint", request.URL.Path)
+		}
+		response.Header().Set("Content-Type", "application/json")
+		response.WriteHeader(http.StatusTooManyRequests)
+		_, _ = response.Write([]byte(`{"error":"RateLimitExceeded","message":"try again later"}`))
+	}))
+	defer server.Close()
+
+	client, err := NewWithAPIClient("editor.example.com", atclient.NewAPIClient(server.URL))
+	if err != nil {
+		t.Fatalf("new client: %v", err)
+	}
+
+	_, err = client.Ping(context.Background())
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("error = %T %v, want *APIError", err, err)
+	}
+	if apiErr.StatusCode != http.StatusTooManyRequests {
+		t.Errorf("status code = %d, want %d", apiErr.StatusCode, http.StatusTooManyRequests)
+	}
+	if apiErr.Name != "RateLimitExceeded" {
+		t.Errorf("name = %q, want %q", apiErr.Name, "RateLimitExceeded")
+	}
+	if apiErr.Message != "try again later" {
+		t.Errorf("message = %q, want %q", apiErr.Message, "try again later")
+	}
+
+	var indigoErr *atclient.APIError
+	if !errors.As(err, &indigoErr) {
+		t.Error("APIError does not unwrap the Indigo API error")
+	}
+}
+
+func TestNewWithDirectoryReturnsAPIErrorForInvalidAppPassword(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/xrpc/com.atproto.server.createSession" {
+			t.Errorf("request path = %q, want createSession endpoint", request.URL.Path)
+		}
+		response.Header().Set("Content-Type", "application/json")
+		response.WriteHeader(http.StatusUnauthorized)
+		_, _ = response.Write([]byte(`{"error":"AuthenticationRequired","message":"invalid app password"}`))
+	}))
+	defer server.Close()
+
+	directory := identity.NewMockDirectory()
+	directory.Insert(identity.Identity{
+		DID:    syntax.DID("did:plc:ewvi7nxzyoun6zhxrhs64oiz"),
+		Handle: syntax.Handle("sample.bsky.social"),
+		Services: map[string]identity.ServiceEndpoint{
+			"atproto_pds": {URL: server.URL},
+		},
+	})
+
+	_, err := newWithDirectory(context.Background(), "editor.example.com", "sample.bsky.social", "invalid", directory)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("error = %T %v, want *APIError", err, err)
+	}
+	if apiErr.StatusCode != http.StatusUnauthorized {
+		t.Errorf("status code = %d, want %d", apiErr.StatusCode, http.StatusUnauthorized)
+	}
+	if apiErr.Name != "AuthenticationRequired" {
+		t.Errorf("name = %q, want %q", apiErr.Name, "AuthenticationRequired")
 	}
 }
 
