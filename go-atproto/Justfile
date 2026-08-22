@@ -9,3 +9,6 @@ build:
 
 example:
     go run ./example
+
+lexgen:
+    go tool lexgen  --package gyoka --build-file ./lexgen/gyoka.json ./lexicons/
