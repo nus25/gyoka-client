@@ -22,3 +22,5 @@ To build, run the following command from the repository root:
 ```bash
 cd ./go/generate/ && go generate
 ```
+## Go AT Protocol
+- go tool lexgen # Regenerate at protocol lexicon schema `go tool lexgen  --package gyoka --build-file ./lexgen/gyoka.json ./lexicons/`

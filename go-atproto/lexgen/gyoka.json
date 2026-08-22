@@ -1,0 +1,7 @@
+[
+    {
+        "package": "gyoka",
+        "prefix": "net.nusno.gyoka",
+        "outdir": "./schema/gyoka"
+    }
+]
