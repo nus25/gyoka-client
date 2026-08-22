@@ -1,0 +1,11 @@
+set dotenv-load
+set default-list
+
+test:
+    go test ./...
+
+build:
+    go build ./...
+
+example:
+    go run ./example
