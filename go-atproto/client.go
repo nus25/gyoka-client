@@ -3,19 +3,49 @@ package client
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/bluesky-social/indigo/atproto/atclient"
+	"github.com/bluesky-social/indigo/atproto/atcrypto"
+	"github.com/bluesky-social/indigo/atproto/auth"
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	lexutil "github.com/bluesky-social/indigo/lex/util"
 	gyoka "github.com/nus25/gyoka-client/go-atproto/schema/gyoka"
 )
 
-const gyokaServiceFragment = "gyoka_editor"
+const (
+	gyokaServiceFragment = "gyoka_editor"
+	serviceAuthTTL       = time.Minute
+)
 
 // Client calls Gyoka Lexicon endpoints through an authenticated PDS service proxy.
 type Client struct {
 	lexClient lexutil.LexClient
+}
+
+// InterServiceAuthConfig configures direct authentication to a Gyoka service.
+type InterServiceAuthConfig struct {
+	Host       string
+	Audience   string
+	Issuer     syntax.DID
+	PrivateKey atcrypto.PrivateKey
+}
+
+type serviceAuthMethod struct {
+	audience   string
+	issuer     syntax.DID
+	privateKey atcrypto.PrivateKey
+}
+
+func (a *serviceAuthMethod) DoWithAuth(httpClient *http.Client, request *http.Request, endpoint syntax.NSID) (*http.Response, error) {
+	token, err := auth.SignServiceAuth(a.issuer, a.audience, serviceAuthTTL, &endpoint, a.privateKey)
+	if err != nil {
+		return nil, fmt.Errorf("sign inter-service authentication JWT: %w", err)
+	}
+	request.Header.Set("Authorization", "Bearer "+token)
+	return httpClient.Do(request)
 }
 
 // New creates a Client for the Gyoka service at host.
@@ -41,11 +71,38 @@ func newWithDirectory(ctx context.Context, host, identifier, appPassword string,
 	return NewWithAPIClient(host, apiClient)
 }
 
+// NewWithInterServiceAuth creates a Client that connects directly to Host.
+//
+// Audience is the full receiving service reference used in the JWT aud claim.
+// Issuer and PrivateKey must correspond to the issuer DID's #atproto key.
+func NewWithInterServiceAuth(config InterServiceAuthConfig) (*Client, error) {
+	if config.Host == "" {
+		return nil, fmt.Errorf("Gyoka host is required")
+	}
+	if config.Audience == "" {
+		return nil, fmt.Errorf("Gyoka audience is required")
+	}
+	if config.Issuer == "" {
+		return nil, fmt.Errorf("issuer DID is required")
+	}
+	if config.PrivateKey == nil {
+		return nil, fmt.Errorf("issuer private key is required")
+	}
+
+	apiClient := atclient.NewAPIClient(config.Host)
+	apiClient.Auth = &serviceAuthMethod{
+		audience:   config.Audience,
+		issuer:     config.Issuer,
+		privateKey: config.PrivateKey,
+	}
+	return &Client{lexClient: apiClient}, nil
+}
+
 // NewWithAPIClient creates a Client using an authenticated Indigo API client.
 //
 // It configures apiClient to proxy requests to did:web:<host>#gyoka_editor.
 // Use it to provide a client authenticated through a mechanism other than an
-// app password, such as future inter-service authentication.
+// app password.
 func NewWithAPIClient(host string, apiClient *atclient.APIClient) (*Client, error) {
 	if host == "" {
 		return nil, fmt.Errorf("Gyoka host is required")

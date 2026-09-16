@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/bluesky-social/indigo/atproto/atclient"
+	"github.com/bluesky-social/indigo/atproto/atcrypto"
+	"github.com/bluesky-social/indigo/atproto/auth"
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 	lexutil "github.com/bluesky-social/indigo/lex/util"
@@ -77,6 +80,75 @@ func TestNewWithDirectoryAuthenticatesAndProxiesRequests(t *testing.T) {
 	})
 
 	client, err := newWithDirectory(context.Background(), host, identifier, appPassword, directory)
+	if err != nil {
+		t.Fatalf("new client: %v", err)
+	}
+
+	output, err := client.Ping(context.Background())
+	if err != nil {
+		t.Fatalf("ping: %v", err)
+	}
+	if output.Message != "ok" {
+		t.Errorf("ping message = %q, want %q", output.Message, "ok")
+	}
+}
+
+func TestNewWithInterServiceAuthAuthenticatesDirectRequest(t *testing.T) {
+	const (
+		issuerDID = "did:plc:ewvi7nxzyoun6zhxrhsample"
+		audience  = "did:web:editor.example.com#gyoka_editor"
+	)
+
+	privateKey, err := atcrypto.GeneratePrivateKeyP256()
+	if err != nil {
+		t.Fatalf("generate private key: %v", err)
+	}
+	publicKey, err := privateKey.PublicKey()
+	if err != nil {
+		t.Fatalf("get public key: %v", err)
+	}
+
+	directory := identity.NewMockDirectory()
+	directory.Insert(identity.Identity{
+		DID: syntax.DID(issuerDID),
+		Keys: map[string]identity.VerificationMethod{
+			"atproto": {
+				Type:               "Multikey",
+				PublicKeyMultibase: publicKey.Multibase(),
+			},
+		},
+	})
+	validator := auth.ServiceAuthValidator{Audience: audience, Dir: directory}
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/xrpc/net.nusno.gyoka.ping" {
+			t.Errorf("request path = %q, want ping endpoint", request.URL.Path)
+		}
+		if proxy := request.Header.Get("Atproto-Proxy"); proxy != "" {
+			t.Errorf("Atproto-Proxy = %q, want empty", proxy)
+		}
+
+		endpoint := syntax.NSID("net.nusno.gyoka.ping")
+		token := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
+		issuer, err := validator.Validate(request.Context(), token, &endpoint)
+		if err != nil {
+			t.Errorf("validate service auth JWT: %v", err)
+		}
+		if issuer.String() != issuerDID {
+			t.Errorf("issuer = %q, want %q", issuer, issuerDID)
+		}
+
+		response.Header().Set("Content-Type", "application/json")
+		_, _ = response.Write([]byte(`{"message":"ok"}`))
+	}))
+	defer server.Close()
+
+	client, err := NewWithInterServiceAuth(InterServiceAuthConfig{
+		Host:       server.URL,
+		Audience:   audience,
+		Issuer:     syntax.DID(issuerDID),
+		PrivateKey: privateKey,
+	})
 	if err != nil {
 		t.Fatalf("new client: %v", err)
 	}
