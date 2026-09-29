@@ -171,12 +171,13 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 	_, _ = client.AddPost(ctx, nil)
 	_, _ = client.BatchAddPosts(ctx, nil)
 	_, _ = client.BatchRemovePosts(ctx, nil)
-	_, _ = client.GetPosts(ctx, "cursor", "at://did:plc:test/app.bsky.feed.generator/feed", 10)
+	_, _ = client.GetPosts(ctx, "cid", "cursor", "at://did:plc:test/app.bsky.feed.generator/feed", "2026-09-29T00:00:00Z", 10, "at://did:plc:test/app.bsky.feed.post/post")
 	_, _ = client.ListFeeds(ctx)
 	_, _ = client.RegisterFeed(ctx, nil)
 	_, _ = client.RemovePost(ctx, nil)
 	_, _ = client.RemovePostByAuthor(ctx, nil)
 	_, _ = client.TrimFeed(ctx, nil)
+	_, _ = client.TrimFeedBefore(ctx, nil)
 	_, _ = client.UnregisterFeed(ctx, nil)
 	_, _ = client.UpdateFeed(ctx, nil)
 	_, _ = client.GetDocument(ctx, "about")
@@ -193,6 +194,7 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 		"net.nusno.gyoka.feed.removePost",
 		"net.nusno.gyoka.feed.removePostByAuthor",
 		"net.nusno.gyoka.feed.trimFeed",
+		"net.nusno.gyoka.feed.trimFeedBefore",
 		"net.nusno.gyoka.feed.unregisterFeed",
 		"net.nusno.gyoka.feed.updateFeed",
 		"net.nusno.gyoka.document.getDocument",
@@ -200,6 +202,50 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 	}
 	if !reflect.DeepEqual(recorder.endpoints, want) {
 		t.Errorf("endpoints = %#v, want %#v", recorder.endpoints, want)
+	}
+}
+
+func TestGetPostsForwardsFilters(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/xrpc/net.nusno.gyoka.feed.getPosts" {
+			t.Errorf("request path = %q, want getPosts endpoint", request.URL.Path)
+		}
+
+		query := request.URL.Query()
+		for key, want := range map[string]string{
+			"cid":       "bafyreifilteredcid",
+			"cursor":    "next-page",
+			"feed":      "at://did:plc:test/app.bsky.feed.generator/feed",
+			"indexedAt": "2026-09-29T00:00:00Z",
+			"limit":     "10",
+			"uri":       "at://did:plc:test/app.bsky.feed.post/post",
+		} {
+			if got := query.Get(key); got != want {
+				t.Errorf("query %s = %q, want %q", key, got, want)
+			}
+		}
+
+		response.Header().Set("Content-Type", "application/json")
+		_, _ = response.Write([]byte(`{"feed":"at://did:plc:test/app.bsky.feed.generator/feed","posts":[]}`))
+	}))
+	defer server.Close()
+
+	client, err := NewWithAPIClient("editor.example.com", atclient.NewAPIClient(server.URL))
+	if err != nil {
+		t.Fatalf("new client: %v", err)
+	}
+
+	_, err = client.GetPosts(
+		context.Background(),
+		"bafyreifilteredcid",
+		"next-page",
+		"at://did:plc:test/app.bsky.feed.generator/feed",
+		"2026-09-29T00:00:00Z",
+		10,
+		"at://did:plc:test/app.bsky.feed.post/post",
+	)
+	if err != nil {
+		t.Fatalf("get posts: %v", err)
 	}
 }
 
