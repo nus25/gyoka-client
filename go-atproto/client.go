@@ -131,7 +131,7 @@ func (c *Client) BatchRemovePosts(ctx context.Context, input *gyoka.FeedBatchRem
 	return normalizeResult(gyoka.FeedBatchRemovePosts(ctx, c.lexClient, input))
 }
 
-func (c *Client) GetPosts(ctx context.Context, feed, cid, uri, indexedAt, cursor string, limit int64) (*gyoka.FeedGetPosts_Output, error) {
+func (c *Client) GetPosts(ctx context.Context, feed, uri, cid, indexedAt, cursor string, limit int64) (*gyoka.FeedGetPosts_Output, error) {
 	return normalizeResult(gyoka.FeedGetPosts(ctx, c.lexClient, cid, cursor, feed, indexedAt, limit, uri))
 }
 

@@ -171,7 +171,7 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 	_, _ = client.AddPost(ctx, nil)
 	_, _ = client.BatchAddPosts(ctx, nil)
 	_, _ = client.BatchRemovePosts(ctx, nil)
-	_, _ = client.GetPosts(ctx, "at://did:plc:test/app.bsky.feed.generator/feed", "cid", "uri", "2026-09-29T00:00:00Z", "cursor", 10)
+	_, _ = client.GetPosts(ctx, "at://did:plc:test/app.bsky.feed.generator/feed", "uri", "cid", "2026-09-29T00:00:00Z", "cursor", 10)
 	_, _ = client.ListFeeds(ctx)
 	_, _ = client.RegisterFeed(ctx, nil)
 	_, _ = client.RemovePost(ctx, nil)
@@ -238,8 +238,8 @@ func TestGetPostsForwardsFilters(t *testing.T) {
 	_, err = client.GetPosts(
 		context.Background(),
 		"at://did:plc:test/app.bsky.feed.generator/feed",
-		"bafyreifilteredcid",
 		"at://did:plc:test/app.bsky.feed.post/post",
+		"bafyreifilteredcid",
 		"2026-09-29T00:00:00Z",
 		"next-page",
 		10,
