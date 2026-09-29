@@ -7,16 +7,11 @@
       "description": "Fetch the stored document body and URL for a Gyoka document type.",
       "parameters": {
         "type": "params",
-        "required": [
-          "docType"
-        ],
+        "required": ["docType"],
         "properties": {
           "docType": {
             "type": "string",
-            "knownValues": [
-              "tos",
-              "privacy_policy"
-            ],
+            "knownValues": ["tos", "privacy_policy"],
             "description": "Document type to fetch."
           }
         }
@@ -25,22 +20,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [
-            "docType",
-            "url",
-            "content"
-          ],
-          "nullable": [
-            "url",
-            "content"
-          ],
+          "required": ["docType", "url", "content"],
+          "nullable": ["url", "content"],
           "properties": {
             "docType": {
               "type": "string",
-              "knownValues": [
-                "tos",
-                "privacy_policy"
-              ]
+              "knownValues": ["tos", "privacy_policy"]
             },
             "url": {
               "type": "string",

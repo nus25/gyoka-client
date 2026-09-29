@@ -1,32 +1,25 @@
 {
   "lexicon": 1,
-  "id": "net.nusno.gyoka.document.updateDocument",
+  "id": "net.nusno.gyoka.feed.trimFeedBefore",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Update the stored document body and URL for a Gyoka document type.",
+      "description": "Remove stored posts indexed before a specified timestamp from a registered Gyoka feed.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["docType"],
-          "nullable": ["url", "content"],
+          "required": ["feed", "before"],
           "properties": {
-            "docType": {
+            "feed": {
               "type": "string",
-              "knownValues": ["tos", "privacy_policy"],
-              "description": "Document type to update."
+              "format": "at-uri",
+              "description": "AT-URI of the registered feed."
             },
-            "url": {
+            "before": {
               "type": "string",
-              "format": "uri",
-              "maxLength": 2048,
-              "description": "Optional source URL for the document."
-            },
-            "content": {
-              "type": "string",
-              "maxLength": 32768,
-              "description": "Optional inline content for the document."
+              "format": "datetime",
+              "description": "Exclusive timestamp boundary. Posts indexed before this time are removed."
             }
           }
         }
@@ -35,21 +28,22 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["docType", "url", "content"],
-          "nullable": ["url", "content"],
+          "required": ["message", "feed", "before", "deletedCount"],
           "properties": {
-            "docType": {
-              "type": "string",
-              "knownValues": ["tos", "privacy_policy"]
+            "message": {
+              "type": "string"
             },
-            "url": {
+            "feed": {
               "type": "string",
-              "format": "uri",
-              "maxLength": 2048
+              "format": "at-uri"
             },
-            "content": {
+            "before": {
               "type": "string",
-              "maxLength": 32768
+              "format": "datetime"
+            },
+            "deletedCount": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         }
@@ -68,8 +62,12 @@
           "description": "Returned when the request payload is invalid."
         },
         {
+          "name": "UnknownFeed",
+          "description": "Returned when the target feed URI is not registered."
+        },
+        {
           "name": "InternalServerError",
-          "description": "Returned when the document cannot be updated."
+          "description": "Returned when posts cannot be removed."
         }
       ]
     }
