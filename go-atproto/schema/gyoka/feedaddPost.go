@@ -19,9 +19,9 @@ type FeedAddPost_Input struct {
 
 // FeedAddPost_Output is the output of a net.nusno.gyoka.feed.addPost call.
 type FeedAddPost_Output struct {
-	Feed    string              `json:"feed" cborgen:"feed"`
-	Message string              `json:"message" cborgen:"message"`
-	Post    *FeedDefs_PostInput `json:"post" cborgen:"post"`
+	Feed    string             `json:"feed" cborgen:"feed"`
+	Message string             `json:"message" cborgen:"message"`
+	Post    *FeedDefs_PostView `json:"post" cborgen:"post"`
 }
 
 // FeedAddPost calls the XRPC method "net.nusno.gyoka.feed.addPost".
