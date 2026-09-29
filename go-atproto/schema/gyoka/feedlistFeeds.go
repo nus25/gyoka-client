@@ -10,21 +10,9 @@ import (
 	lexutil "github.com/bluesky-social/indigo/lex/util"
 )
 
-// FeedListFeeds_FeedView is a "feedView" in the net.nusno.gyoka.feed.listFeeds schema.
-//
-// A Gyoka feed entry.
-type FeedListFeeds_FeedView struct {
-	// isActive: Whether the feed is currently active.
-	IsActive bool `json:"isActive" cborgen:"isActive"`
-	// langFilter: Whether language filtering is enabled for the feed.
-	LangFilter bool `json:"langFilter" cborgen:"langFilter"`
-	// uri: AT-URI of the feed generator record.
-	Uri string `json:"uri" cborgen:"uri"`
-}
-
 // FeedListFeeds_Output is the output of a net.nusno.gyoka.feed.listFeeds call.
 type FeedListFeeds_Output struct {
-	Feeds []*FeedListFeeds_FeedView `json:"feeds" cborgen:"feeds"`
+	Feeds []*FeedDefs_FeedView `json:"feeds" cborgen:"feeds"`
 }
 
 // FeedListFeeds calls the XRPC method "net.nusno.gyoka.feed.listFeeds".

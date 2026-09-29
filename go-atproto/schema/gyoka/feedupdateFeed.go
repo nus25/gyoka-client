@@ -10,13 +10,6 @@ import (
 	lexutil "github.com/bluesky-social/indigo/lex/util"
 )
 
-// FeedUpdateFeed_FeedView is a "feedView" in the net.nusno.gyoka.feed.updateFeed schema.
-type FeedUpdateFeed_FeedView struct {
-	IsActive   bool   `json:"isActive" cborgen:"isActive"`
-	LangFilter bool   `json:"langFilter" cborgen:"langFilter"`
-	Uri        string `json:"uri" cborgen:"uri"`
-}
-
 // FeedUpdateFeed_Input is the input argument to a net.nusno.gyoka.feed.updateFeed call.
 type FeedUpdateFeed_Input struct {
 	// isActive: Whether the feed is active.
@@ -29,8 +22,8 @@ type FeedUpdateFeed_Input struct {
 
 // FeedUpdateFeed_Output is the output of a net.nusno.gyoka.feed.updateFeed call.
 type FeedUpdateFeed_Output struct {
-	Feed    *FeedUpdateFeed_FeedView `json:"feed" cborgen:"feed"`
-	Message string                   `json:"message" cborgen:"message"`
+	Feed    *FeedDefs_FeedView `json:"feed" cborgen:"feed"`
+	Message string             `json:"message" cborgen:"message"`
 }
 
 // FeedUpdateFeed calls the XRPC method "net.nusno.gyoka.feed.updateFeed".

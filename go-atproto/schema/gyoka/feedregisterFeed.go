@@ -10,16 +10,6 @@ import (
 	lexutil "github.com/bluesky-social/indigo/lex/util"
 )
 
-// FeedRegisterFeed_FeedView is a "feedView" in the net.nusno.gyoka.feed.registerFeed schema.
-//
-// Registered feed entry.
-type FeedRegisterFeed_FeedView struct {
-	IsActive   bool `json:"isActive" cborgen:"isActive"`
-	LangFilter bool `json:"langFilter" cborgen:"langFilter"`
-	// uri: AT-URI of the app.bsky.feed.generator record.
-	Uri string `json:"uri" cborgen:"uri"`
-}
-
 // FeedRegisterFeed_Input is the input argument to a net.nusno.gyoka.feed.registerFeed call.
 type FeedRegisterFeed_Input struct {
 	// isActive: Whether the feed is active.
@@ -32,8 +22,8 @@ type FeedRegisterFeed_Input struct {
 
 // FeedRegisterFeed_Output is the output of a net.nusno.gyoka.feed.registerFeed call.
 type FeedRegisterFeed_Output struct {
-	Feed    *FeedRegisterFeed_FeedView `json:"feed" cborgen:"feed"`
-	Message string                     `json:"message" cborgen:"message"`
+	Feed    *FeedDefs_FeedView `json:"feed" cborgen:"feed"`
+	Message string             `json:"message" cborgen:"message"`
 }
 
 // FeedRegisterFeed calls the XRPC method "net.nusno.gyoka.feed.registerFeed".

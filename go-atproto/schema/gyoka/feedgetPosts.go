@@ -6,96 +6,47 @@ package gyoka
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	lexutil "github.com/bluesky-social/indigo/lex/util"
 )
 
 // FeedGetPosts_Output is the output of a net.nusno.gyoka.feed.getPosts call.
 type FeedGetPosts_Output struct {
-	Cursor *string                  `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
-	Feed   string                   `json:"feed" cborgen:"feed"`
-	Posts  []*FeedGetPosts_PostView `json:"posts" cborgen:"posts"`
-}
-
-// FeedGetPosts_PostView is a "postView" in the net.nusno.gyoka.feed.getPosts schema.
-type FeedGetPosts_PostView struct {
-	Cid         string  `json:"cid" cborgen:"cid"`
-	FeedContext *string `json:"feedContext,omitempty" cborgen:"feedContext,omitempty"`
-	IndexedAt   string  `json:"indexedAt" cborgen:"indexedAt"`
-	// langs: Deprecated alias of languages.
-	Langs     []string `json:"langs,omitempty" cborgen:"langs,omitempty"`
-	Languages []string `json:"languages" cborgen:"languages"`
-	// reason: AT Protocol feed skeleton reason for this post.
-	Reason *FeedGetPosts_PostView_Reason `json:"reason,omitempty" cborgen:"reason,omitempty"`
-	// uri: AT-URI of the app.bsky.feed.post record.
-	Uri string `json:"uri" cborgen:"uri"`
-}
-
-// AT Protocol feed skeleton reason for this post.
-type FeedGetPosts_PostView_Reason struct {
-	FeedGetPosts_SkeletonReasonRepost *FeedGetPosts_SkeletonReasonRepost
-	FeedGetPosts_SkeletonReasonPin    *FeedGetPosts_SkeletonReasonPin
-}
-
-func (t *FeedGetPosts_PostView_Reason) MarshalJSON() ([]byte, error) {
-	if t.FeedGetPosts_SkeletonReasonRepost != nil {
-		t.FeedGetPosts_SkeletonReasonRepost.LexiconTypeID = "net.nusno.gyoka.feed.getPosts#skeletonReasonRepost"
-		return json.Marshal(t.FeedGetPosts_SkeletonReasonRepost)
-	}
-	if t.FeedGetPosts_SkeletonReasonPin != nil {
-		t.FeedGetPosts_SkeletonReasonPin.LexiconTypeID = "net.nusno.gyoka.feed.getPosts#skeletonReasonPin"
-		return json.Marshal(t.FeedGetPosts_SkeletonReasonPin)
-	}
-	return nil, fmt.Errorf("can not marshal empty union as JSON")
-}
-
-func (t *FeedGetPosts_PostView_Reason) UnmarshalJSON(b []byte) error {
-	typ, err := lexutil.TypeExtract(b)
-	if err != nil {
-		return err
-	}
-
-	switch typ {
-	case "net.nusno.gyoka.feed.getPosts#skeletonReasonRepost":
-		t.FeedGetPosts_SkeletonReasonRepost = new(FeedGetPosts_SkeletonReasonRepost)
-		return json.Unmarshal(b, t.FeedGetPosts_SkeletonReasonRepost)
-	case "net.nusno.gyoka.feed.getPosts#skeletonReasonPin":
-		t.FeedGetPosts_SkeletonReasonPin = new(FeedGetPosts_SkeletonReasonPin)
-		return json.Unmarshal(b, t.FeedGetPosts_SkeletonReasonPin)
-	default:
-		return fmt.Errorf("closed unions must match a listed schema")
-	}
-}
-
-// FeedGetPosts_SkeletonReasonPin is a "skeletonReasonPin" in the net.nusno.gyoka.feed.getPosts schema.
-type FeedGetPosts_SkeletonReasonPin struct {
-	LexiconTypeID string `json:"$type" cborgen:"$type,const=net.nusno.gyoka.feed.getPosts#skeletonReasonPin"`
-}
-
-// FeedGetPosts_SkeletonReasonRepost is a "skeletonReasonRepost" in the net.nusno.gyoka.feed.getPosts schema.
-type FeedGetPosts_SkeletonReasonRepost struct {
-	LexiconTypeID string `json:"$type" cborgen:"$type,const=net.nusno.gyoka.feed.getPosts#skeletonReasonRepost"`
-	// repost: AT-URI of the app.bsky.feed.repost record associated with this reason.
-	Repost string `json:"repost" cborgen:"repost"`
+	// cursor: Opaque cursor for retrieving the next page with the same search conditions.
+	Cursor *string              `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
+	Feed   string               `json:"feed" cborgen:"feed"`
+	Posts  []*FeedDefs_PostView `json:"posts" cborgen:"posts"`
 }
 
 // FeedGetPosts calls the XRPC method "net.nusno.gyoka.feed.getPosts".
 //
-// cursor: Opaque pagination cursor encoded as <epochMs>::<cid>.
-// feed: AT-URI of the feed generator record to read.
+// cid: Optional post CID filter. Must match the cursor when provided.
+// cursor: Opaque pagination cursor that includes the paging position and normalized search conditions.
+// feed: Feed generator AT-URI. Required when cursor is omitted; must match the cursor when provided.
+// indexedAt: Optional indexed-at timestamp filter. Must match the cursor when provided.
 // limit: Maximum number of posts to return.
-func FeedGetPosts(ctx context.Context, c lexutil.LexClient, cursor string, feed string, limit int64) (*FeedGetPosts_Output, error) {
+// uri: Optional post AT-URI filter. Must match the cursor when provided.
+func FeedGetPosts(ctx context.Context, c lexutil.LexClient, cid string, cursor string, feed string, indexedAt string, limit int64, uri string) (*FeedGetPosts_Output, error) {
 	var out FeedGetPosts_Output
 
 	params := map[string]interface{}{}
+	if cid != "" {
+		params["cid"] = cid
+	}
 	if cursor != "" {
 		params["cursor"] = cursor
 	}
-	params["feed"] = feed
+	if feed != "" {
+		params["feed"] = feed
+	}
+	if indexedAt != "" {
+		params["indexedAt"] = indexedAt
+	}
 	if limit != 0 {
 		params["limit"] = limit
+	}
+	if uri != "" {
+		params["uri"] = uri
 	}
 	if err := c.LexDo(ctx, lexutil.Query, "", "net.nusno.gyoka.feed.getPosts", params, nil, &out); err != nil {
 		return nil, err
