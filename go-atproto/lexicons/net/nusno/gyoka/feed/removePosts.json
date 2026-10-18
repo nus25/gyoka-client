@@ -1,25 +1,28 @@
 {
   "lexicon": 1,
-  "id": "net.nusno.gyoka.feed.trimFeedBefore",
+  "id": "net.nusno.gyoka.feed.removePosts",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove stored posts indexed before a specified timestamp from a registered Gyoka feed.",
+      "description": "Remove posts from a feed by post URI.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["feed", "before"],
+          "required": ["feed", "uris"],
           "properties": {
             "feed": {
               "type": "string",
-              "format": "at-uri",
-              "description": "AT-URI of the registered feed."
+              "format": "at-uri"
             },
-            "before": {
-              "type": "string",
-              "format": "datetime",
-              "description": "Exclusive timestamp boundary. Posts indexed before this time are removed."
+            "uris": {
+              "type": "array",
+              "minLength": 1,
+              "maxLength": 1000,
+              "items": {
+                "type": "string",
+                "format": "at-uri"
+              }
             }
           }
         }
@@ -28,18 +31,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["message", "feed", "before", "deletedCount"],
+          "required": ["feed", "orderRevision", "deletedCount"],
           "properties": {
-            "message": {
-              "type": "string"
-            },
             "feed": {
               "type": "string",
               "format": "at-uri"
             },
-            "before": {
-              "type": "string",
-              "format": "datetime"
+            "orderRevision": {
+              "type": "integer",
+              "minimum": 0
             },
             "deletedCount": {
               "type": "integer",
@@ -59,7 +59,7 @@
         },
         {
           "name": "BadRequest",
-          "description": "Returned when the request payload is invalid."
+          "description": "Returned when request structure or URI input is invalid."
         },
         {
           "name": "UnknownFeed",

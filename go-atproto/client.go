@@ -119,52 +119,53 @@ func (c *Client) Ping(ctx context.Context) (*gyoka.Ping_Output, error) {
 	return normalizeResult(gyoka.Ping(ctx, c.lexClient))
 }
 
-func (c *Client) AddPost(ctx context.Context, input *gyoka.FeedAddPost_Input) (*gyoka.FeedAddPost_Output, error) {
-	return normalizeResult(gyoka.FeedAddPost(ctx, c.lexClient, input))
-}
-
-func (c *Client) BatchAddPosts(ctx context.Context, input *gyoka.FeedBatchAddPosts_Input) (*gyoka.FeedBatchAddPosts_Output, error) {
-	return normalizeResult(gyoka.FeedBatchAddPosts(ctx, c.lexClient, input))
-}
-
-func (c *Client) BatchRemovePosts(ctx context.Context, input *gyoka.FeedBatchRemovePosts_Input) (*gyoka.FeedBatchRemovePosts_Output, error) {
-	return normalizeResult(gyoka.FeedBatchRemovePosts(ctx, c.lexClient, input))
-}
-
-func (c *Client) GetPosts(ctx context.Context, feed, uri, cid, indexedAt, cursor string, limit int64) (*gyoka.FeedGetPosts_Output, error) {
-	return normalizeResult(gyoka.FeedGetPosts(ctx, c.lexClient, cid, cursor, feed, indexedAt, limit, uri))
+func (c *Client) RegisterFeed(ctx context.Context, input *gyoka.FeedRegisterFeed_Input) (*gyoka.FeedRegisterFeed_Output, error) {
+	return normalizeResult(gyoka.FeedRegisterFeed(ctx, c.lexClient, input))
 }
 
 func (c *Client) ListFeeds(ctx context.Context) (*gyoka.FeedListFeeds_Output, error) {
 	return normalizeResult(gyoka.FeedListFeeds(ctx, c.lexClient))
 }
 
-func (c *Client) RegisterFeed(ctx context.Context, input *gyoka.FeedRegisterFeed_Input) (*gyoka.FeedRegisterFeed_Output, error) {
-	return normalizeResult(gyoka.FeedRegisterFeed(ctx, c.lexClient, input))
-}
-
-func (c *Client) RemovePost(ctx context.Context, input *gyoka.FeedRemovePost_Input) (*gyoka.FeedRemovePost_Output, error) {
-	return normalizeResult(gyoka.FeedRemovePost(ctx, c.lexClient, input))
-}
-
-func (c *Client) RemovePostByAuthor(ctx context.Context, input *gyoka.FeedRemovePostByAuthor_Input) (*gyoka.FeedRemovePostByAuthor_Output, error) {
-	return normalizeResult(gyoka.FeedRemovePostByAuthor(ctx, c.lexClient, input))
-}
-
-func (c *Client) TrimFeed(ctx context.Context, input *gyoka.FeedTrimFeed_Input) (*gyoka.FeedTrimFeed_Output, error) {
-	return normalizeResult(gyoka.FeedTrimFeed(ctx, c.lexClient, input))
-}
-
-func (c *Client) TrimFeedBefore(ctx context.Context, input *gyoka.FeedTrimFeedBefore_Input) (*gyoka.FeedTrimFeedBefore_Output, error) {
-	return normalizeResult(gyoka.FeedTrimFeedBefore(ctx, c.lexClient, input))
+func (c *Client) UpdateFeed(ctx context.Context, input *gyoka.FeedUpdateFeed_Input) (*gyoka.FeedUpdateFeed_Output, error) {
+	return normalizeResult(gyoka.FeedUpdateFeed(ctx, c.lexClient, input))
 }
 
 func (c *Client) UnregisterFeed(ctx context.Context, input *gyoka.FeedUnregisterFeed_Input) (*gyoka.FeedUnregisterFeed_Output, error) {
 	return normalizeResult(gyoka.FeedUnregisterFeed(ctx, c.lexClient, input))
 }
 
-func (c *Client) UpdateFeed(ctx context.Context, input *gyoka.FeedUpdateFeed_Input) (*gyoka.FeedUpdateFeed_Output, error) {
-	return normalizeResult(gyoka.FeedUpdateFeed(ctx, c.lexClient, input))
+func (c *Client) PutPosts(ctx context.Context, input *gyoka.FeedPutPosts_Input) (*gyoka.FeedPutPosts_Output, error) {
+	return normalizeResult(gyoka.FeedPutPosts(ctx, c.lexClient, input))
+}
+
+func (c *Client) RemovePosts(ctx context.Context, input *gyoka.FeedRemovePosts_Input) (*gyoka.FeedRemovePosts_Output, error) {
+	return normalizeResult(gyoka.FeedRemovePosts(ctx, c.lexClient, input))
+}
+
+func (c *Client) RemovePostsByAuthor(ctx context.Context, input *gyoka.FeedRemovePostsByAuthor_Input) (*gyoka.FeedRemovePostsByAuthor_Output, error) {
+	return normalizeResult(gyoka.FeedRemovePostsByAuthor(ctx, c.lexClient, input))
+}
+
+func (c *Client) MovePosts(ctx context.Context, input *gyoka.FeedMovePosts_Input) (*gyoka.FeedMovePosts_Output, error) {
+	return normalizeResult(gyoka.FeedMovePosts(ctx, c.lexClient, input))
+}
+
+func (c *Client) GetPosts(ctx context.Context, feed, postUri, author string, limit int64, cursor string) (*gyoka.FeedGetPosts_Output, error) {
+	// sort arguments as required by the API: author, cursor, feed, limit, postUri
+	return normalizeResult(gyoka.FeedGetPosts(ctx, c.lexClient, author, cursor, feed, limit, postUri))
+}
+
+func (c *Client) TrimPosts(ctx context.Context, input *gyoka.FeedTrimPosts_Input) (*gyoka.FeedTrimPosts_Output, error) {
+	return normalizeResult(gyoka.FeedTrimPosts(ctx, c.lexClient, input))
+}
+
+func (c *Client) PrunePostsBefore(ctx context.Context, input *gyoka.FeedPrunePostsBefore_Input) (*gyoka.FeedPrunePostsBefore_Output, error) {
+	return normalizeResult(gyoka.FeedPrunePostsBefore(ctx, c.lexClient, input))
+}
+
+func (c *Client) RebalanceOrder(ctx context.Context, input *gyoka.FeedRebalanceOrder_Input) (*gyoka.FeedRebalanceOrder_Output, error) {
+	return normalizeResult(gyoka.FeedRebalanceOrder(ctx, c.lexClient, input))
 }
 
 func (c *Client) GetDocument(ctx context.Context, docType string) (*gyoka.DocumentGetDocument_Output, error) {

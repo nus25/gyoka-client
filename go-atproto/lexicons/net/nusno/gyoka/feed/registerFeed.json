@@ -18,7 +18,7 @@
             },
             "langFilter": {
               "type": "boolean",
-              "description": "Whether language filtering is enabled for this feed.",
+              "description": "Whether language filtering by request's Accept-Language header is enabled for this feed.",
               "default": true
             },
             "isActive": {

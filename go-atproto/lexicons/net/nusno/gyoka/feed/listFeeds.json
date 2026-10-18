@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List all registered Gyoka feeds with their language-filter and activation flags.",
+      "description": "List all registered feeds.",
       "output": {
         "encoding": "application/json",
         "schema": {

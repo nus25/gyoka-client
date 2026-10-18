@@ -14,7 +14,7 @@ import (
 type FeedRegisterFeed_Input struct {
 	// isActive: Whether the feed is active.
 	IsActive *bool `json:"isActive,omitempty" cborgen:"isActive,omitempty"`
-	// langFilter: Whether language filtering is enabled for this feed.
+	// langFilter: Whether language filtering by request's Accept-Language header is enabled for this feed.
 	LangFilter *bool `json:"langFilter,omitempty" cborgen:"langFilter,omitempty"`
 	// uri: AT-URI of the feed generator record to register.
 	Uri string `json:"uri" cborgen:"uri"`

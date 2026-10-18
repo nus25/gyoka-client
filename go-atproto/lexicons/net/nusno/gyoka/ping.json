@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Check whether the Gyoka editor-atproto service is reachable.",
+      "description": "Check whether the Gyoka editor service is reachable.",
       "output": {
         "encoding": "application/json",
         "schema": {

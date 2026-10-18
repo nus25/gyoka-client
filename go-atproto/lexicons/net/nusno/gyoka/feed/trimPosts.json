@@ -1,24 +1,23 @@
 {
   "lexicon": 1,
-  "id": "net.nusno.gyoka.feed.addPost",
+  "id": "net.nusno.gyoka.feed.trimPosts",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Add a post to a registered Gyoka feed.",
+      "description": "Keep the leading posts in the current feed display order and remove the rest.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["feed", "post"],
+          "required": ["feed", "remain"],
           "properties": {
             "feed": {
               "type": "string",
-              "format": "at-uri",
-              "description": "AT-URI of the feed generator record receiving the post."
+              "format": "at-uri"
             },
-            "post": {
-              "type": "ref",
-              "ref": "net.nusno.gyoka.feed.defs#postInput"
+            "remain": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         }
@@ -27,18 +26,20 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["message", "feed", "post"],
+          "required": ["feed", "deletedCount", "orderRevision"],
           "properties": {
-            "message": {
-              "type": "string"
-            },
             "feed": {
               "type": "string",
               "format": "at-uri"
             },
-            "post": {
-              "type": "ref",
-              "ref": "net.nusno.gyoka.feed.defs#postView"
+            "deletedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "orderRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Current feed order revision after trimming."
             }
           }
         }
@@ -54,15 +55,19 @@
         },
         {
           "name": "BadRequest",
-          "description": "Returned when the request payload is invalid or the post fields cannot be normalized."
+          "description": "Returned when request input is invalid."
         },
         {
           "name": "UnknownFeed",
           "description": "Returned when the target feed URI is not registered."
         },
         {
+          "name": "RevisionConflict",
+          "description": "Returned when a concurrent mutation changes the feed before trimming starts."
+        },
+        {
           "name": "InternalServerError",
-          "description": "Returned when the post cannot be stored."
+          "description": "Returned when posts cannot be trimmed."
         }
       ]
     }

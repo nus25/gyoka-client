@@ -1,24 +1,23 @@
 {
   "lexicon": 1,
-  "id": "net.nusno.gyoka.feed.removePostByAuthor",
+  "id": "net.nusno.gyoka.feed.prunePostsBefore",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove all posts by a specific author from a registered Gyoka feed.",
+      "description": "Remove posts indexed before an exclusive timestamp boundary.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["feed", "author"],
+          "required": ["feed", "before"],
           "properties": {
             "feed": {
               "type": "string",
               "format": "at-uri"
             },
-            "author": {
+            "before": {
               "type": "string",
-              "format": "did",
-              "description": "DID of the post author whose posts should be removed."
+              "format": "datetime"
             }
           }
         }
@@ -27,22 +26,24 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["message", "feed", "author", "deletedCount"],
+          "required": ["feed", "before", "deletedCount", "orderRevision"],
           "properties": {
-            "message": {
-              "type": "string"
-            },
             "feed": {
               "type": "string",
               "format": "at-uri"
             },
-            "author": {
+            "before": {
               "type": "string",
-              "format": "did"
+              "format": "datetime"
             },
             "deletedCount": {
               "type": "integer",
               "minimum": 0
+            },
+            "orderRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Current feed order revision after pruning."
             }
           }
         }
@@ -58,7 +59,7 @@
         },
         {
           "name": "BadRequest",
-          "description": "Returned when the request payload is invalid."
+          "description": "Returned when request input is invalid."
         },
         {
           "name": "UnknownFeed",
@@ -66,7 +67,7 @@
         },
         {
           "name": "InternalServerError",
-          "description": "Returned when the posts cannot be removed."
+          "description": "Returned when posts cannot be pruned."
         }
       ]
     }

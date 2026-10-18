@@ -168,35 +168,35 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 	ctx := context.Background()
 
 	_, _ = client.Ping(ctx)
-	_, _ = client.AddPost(ctx, nil)
-	_, _ = client.BatchAddPosts(ctx, nil)
-	_, _ = client.BatchRemovePosts(ctx, nil)
-	_, _ = client.GetPosts(ctx, "at://did:plc:test/app.bsky.feed.generator/feed", "uri", "cid", "2026-09-29T00:00:00Z", "cursor", 10)
-	_, _ = client.ListFeeds(ctx)
 	_, _ = client.RegisterFeed(ctx, nil)
-	_, _ = client.RemovePost(ctx, nil)
-	_, _ = client.RemovePostByAuthor(ctx, nil)
-	_, _ = client.TrimFeed(ctx, nil)
-	_, _ = client.TrimFeedBefore(ctx, nil)
-	_, _ = client.UnregisterFeed(ctx, nil)
+	_, _ = client.ListFeeds(ctx)
 	_, _ = client.UpdateFeed(ctx, nil)
+	_, _ = client.UnregisterFeed(ctx, nil)
+	_, _ = client.PutPosts(ctx, nil)
+	_, _ = client.RemovePosts(ctx, nil)
+	_, _ = client.RemovePostsByAuthor(ctx, nil)
+	_, _ = client.MovePosts(ctx, nil)
+	_, _ = client.GetPosts(ctx, "feed", "uri", "author", 10, "cursor")
+	_, _ = client.TrimPosts(ctx, nil)
+	_, _ = client.PrunePostsBefore(ctx, nil)
+	_, _ = client.RebalanceOrder(ctx, nil)
 	_, _ = client.GetDocument(ctx, "about")
 	_, _ = client.UpdateDocument(ctx, nil)
 
 	want := []string{
 		"net.nusno.gyoka.ping",
-		"net.nusno.gyoka.feed.addPost",
-		"net.nusno.gyoka.feed.batchAddPosts",
-		"net.nusno.gyoka.feed.batchRemovePosts",
-		"net.nusno.gyoka.feed.getPosts",
-		"net.nusno.gyoka.feed.listFeeds",
 		"net.nusno.gyoka.feed.registerFeed",
-		"net.nusno.gyoka.feed.removePost",
-		"net.nusno.gyoka.feed.removePostByAuthor",
-		"net.nusno.gyoka.feed.trimFeed",
-		"net.nusno.gyoka.feed.trimFeedBefore",
-		"net.nusno.gyoka.feed.unregisterFeed",
+		"net.nusno.gyoka.feed.listFeeds",
 		"net.nusno.gyoka.feed.updateFeed",
+		"net.nusno.gyoka.feed.unregisterFeed",
+		"net.nusno.gyoka.feed.putPosts",
+		"net.nusno.gyoka.feed.removePosts",
+		"net.nusno.gyoka.feed.removePostsByAuthor",
+		"net.nusno.gyoka.feed.movePosts",
+		"net.nusno.gyoka.feed.getPosts",
+		"net.nusno.gyoka.feed.trimPosts",
+		"net.nusno.gyoka.feed.prunePostsBefore",
+		"net.nusno.gyoka.feed.rebalanceOrder",
 		"net.nusno.gyoka.document.getDocument",
 		"net.nusno.gyoka.document.updateDocument",
 	}
@@ -213,12 +213,11 @@ func TestGetPostsForwardsFilters(t *testing.T) {
 
 		query := request.URL.Query()
 		for key, want := range map[string]string{
-			"cid":       "bafyreifilteredcid",
-			"cursor":    "next-page",
-			"feed":      "at://did:plc:test/app.bsky.feed.generator/feed",
-			"indexedAt": "2026-09-29T00:00:00Z",
-			"limit":     "10",
-			"uri":       "at://did:plc:test/app.bsky.feed.post/post",
+			"author": "did:plc:test",
+			"cursor": "next-page",
+			"feed":   "at://did:plc:test/app.bsky.feed.generator/feed",
+			"limit":  "10",
+			"uri":    "at://did:plc:test/app.bsky.feed.post/post",
 		} {
 			if got := query.Get(key); got != want {
 				t.Errorf("query %s = %q, want %q", key, got, want)
@@ -239,10 +238,9 @@ func TestGetPostsForwardsFilters(t *testing.T) {
 		context.Background(),
 		"at://did:plc:test/app.bsky.feed.generator/feed",
 		"at://did:plc:test/app.bsky.feed.post/post",
-		"bafyreifilteredcid",
-		"2026-09-29T00:00:00Z",
-		"next-page",
+		"did:plc:test",
 		10,
+		"next-page",
 	)
 	if err != nil {
 		t.Fatalf("get posts: %v", err)

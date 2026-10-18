@@ -13,34 +13,31 @@ import (
 // FeedGetPosts_Output is the output of a net.nusno.gyoka.feed.getPosts call.
 type FeedGetPosts_Output struct {
 	// cursor: Opaque cursor for retrieving the next page with the same search conditions.
-	Cursor *string              `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
-	Feed   string               `json:"feed" cborgen:"feed"`
-	Posts  []*FeedDefs_PostView `json:"posts" cborgen:"posts"`
+	Cursor        *string              `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
+	Feed          string               `json:"feed" cborgen:"feed"`
+	OrderRevision int64                `json:"orderRevision" cborgen:"orderRevision"`
+	Posts         []*FeedDefs_PostView `json:"posts" cborgen:"posts"`
 }
 
 // FeedGetPosts calls the XRPC method "net.nusno.gyoka.feed.getPosts".
 //
-// cid: Optional post CID filter. Must match the cursor when provided.
+// author: Optional author DID filter. Must match the DID in uri when both are provided, and must match the cursor when provided.
 // cursor: Opaque pagination cursor that includes the paging position and normalized search conditions.
 // feed: Feed generator AT-URI. Required when cursor is omitted; must match the cursor when provided.
-// indexedAt: Optional indexed-at timestamp filter. Must match the cursor when provided.
 // limit: Maximum number of posts to return.
 // uri: Optional post AT-URI filter. Must match the cursor when provided.
-func FeedGetPosts(ctx context.Context, c lexutil.LexClient, cid string, cursor string, feed string, indexedAt string, limit int64, uri string) (*FeedGetPosts_Output, error) {
+func FeedGetPosts(ctx context.Context, c lexutil.LexClient, author string, cursor string, feed string, limit int64, uri string) (*FeedGetPosts_Output, error) {
 	var out FeedGetPosts_Output
 
 	params := map[string]interface{}{}
-	if cid != "" {
-		params["cid"] = cid
+	if author != "" {
+		params["author"] = author
 	}
 	if cursor != "" {
 		params["cursor"] = cursor
 	}
 	if feed != "" {
 		params["feed"] = feed
-	}
-	if indexedAt != "" {
-		params["indexedAt"] = indexedAt
 	}
 	if limit != 0 {
 		params["limit"] = limit

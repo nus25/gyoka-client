@@ -1,24 +1,23 @@
 {
   "lexicon": 1,
-  "id": "net.nusno.gyoka.feed.trimFeed",
+  "id": "net.nusno.gyoka.feed.removePostsByAuthor",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Trim stored posts in a registered Gyoka feed down to a remaining count.",
+      "description": "Remove every post in a feed whose post URI is authored by the specified DID.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["feed", "remain"],
+          "required": ["feed", "author"],
           "properties": {
             "feed": {
               "type": "string",
               "format": "at-uri"
             },
-            "remain": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Number of posts to keep in the feed after trimming."
+            "author": {
+              "type": "string",
+              "format": "did"
             }
           }
         }
@@ -27,18 +26,24 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["message", "feed", "deletedCount"],
+          "required": ["feed", "author", "deletedCount", "orderRevision"],
           "properties": {
-            "message": {
-              "type": "string"
-            },
             "feed": {
               "type": "string",
               "format": "at-uri"
             },
+            "author": {
+              "type": "string",
+              "format": "did"
+            },
             "deletedCount": {
               "type": "integer",
               "minimum": 0
+            },
+            "orderRevision": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Current feed order revision after removing posts."
             }
           }
         }
@@ -54,7 +59,7 @@
         },
         {
           "name": "BadRequest",
-          "description": "Returned when the request payload is invalid."
+          "description": "Returned when request input is invalid."
         },
         {
           "name": "UnknownFeed",
@@ -62,7 +67,7 @@
         },
         {
           "name": "InternalServerError",
-          "description": "Returned when the feed cannot be trimmed."
+          "description": "Returned when posts cannot be removed."
         }
       ]
     }

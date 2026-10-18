@@ -19,17 +19,24 @@ type FeedDefs_FeedView struct {
 	IsActive bool `json:"isActive" cborgen:"isActive"`
 	// langFilter: Whether language filtering is enabled for the feed.
 	LangFilter bool `json:"langFilter" cborgen:"langFilter"`
+	// orderRevision: Current feed order revision.
+	OrderRevision int64 `json:"orderRevision" cborgen:"orderRevision"`
 	// uri: AT-URI of the feed generator record.
 	Uri string `json:"uri" cborgen:"uri"`
+}
+
+// FeedDefs_Placement is a "placement" in the net.nusno.gyoka.feed.defs schema.
+type FeedDefs_Placement struct {
+	// anchor: AT-URI of the anchor post. Required by before and after placements.
+	Anchor *string `json:"anchor,omitempty" cborgen:"anchor,omitempty"`
+	Type   string  `json:"type" cborgen:"type"`
 }
 
 // FeedDefs_PostInput is the input argument to a net.nusno.gyoka.feed.defs call.
 type FeedDefs_PostInput struct {
 	// cid: CID of the post record.
 	Cid string `json:"cid" cborgen:"cid"`
-	// feedContext: Context passed through to the client and feed generator.
-	FeedContext *string `json:"feedContext,omitempty" cborgen:"feedContext,omitempty"`
-	// indexedAt: Timestamp used for feed ordering. Defaults to the current time when omitted.
+	// indexedAt: Timestamp recorded when the post is added. Defaults to the current time when omitted.
 	IndexedAt *string `json:"indexedAt,omitempty" cborgen:"indexedAt,omitempty"`
 	// languages: Optional language tags for the post. The wildcard '*' is accepted, and non-wildcard values are normalized to primary language subtags.
 	Languages []string `json:"languages,omitempty" cborgen:"languages,omitempty"`
@@ -75,14 +82,21 @@ func (t *FeedDefs_PostInput_Reason) UnmarshalJSON(b []byte) error {
 	}
 }
 
+// FeedDefs_PostResult is a "postResult" in the net.nusno.gyoka.feed.defs schema.
+type FeedDefs_PostResult struct {
+	Action string `json:"action" cborgen:"action"`
+	// error: Error code for a failed item.
+	Error *string `json:"error,omitempty" cborgen:"error,omitempty"`
+	Uri   string  `json:"uri" cborgen:"uri"`
+}
+
 // FeedDefs_PostView is a "postView" in the net.nusno.gyoka.feed.defs schema.
 type FeedDefs_PostView struct {
-	Cid         string                    `json:"cid" cborgen:"cid"`
-	FeedContext *string                   `json:"feedContext,omitempty" cborgen:"feedContext,omitempty"`
-	IndexedAt   string                    `json:"indexedAt" cborgen:"indexedAt"`
-	Languages   []string                  `json:"languages" cborgen:"languages"`
-	Reason      *FeedDefs_PostView_Reason `json:"reason,omitempty" cborgen:"reason,omitempty"`
-	Uri         string                    `json:"uri" cborgen:"uri"`
+	Cid       string                    `json:"cid" cborgen:"cid"`
+	IndexedAt string                    `json:"indexedAt" cborgen:"indexedAt"`
+	Languages []string                  `json:"languages" cborgen:"languages"`
+	Reason    *FeedDefs_PostView_Reason `json:"reason,omitempty" cborgen:"reason,omitempty"`
+	Uri       string                    `json:"uri" cborgen:"uri"`
 }
 
 type FeedDefs_PostView_Reason struct {
