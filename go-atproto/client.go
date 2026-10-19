@@ -151,9 +151,9 @@ func (c *Client) MovePosts(ctx context.Context, input *gyoka.FeedMovePosts_Input
 	return normalizeResult(gyoka.FeedMovePosts(ctx, c.lexClient, input))
 }
 
-func (c *Client) GetPosts(ctx context.Context, feed, postUri, author string, limit int64, cursor string) (*gyoka.FeedGetPosts_Output, error) {
+func (c *Client) ListPosts(ctx context.Context, feed, postUri, author, cursor string, limit int64) (*gyoka.FeedListPosts_Output, error) {
 	// sort arguments as required by the API: author, cursor, feed, limit, postUri
-	return normalizeResult(gyoka.FeedGetPosts(ctx, c.lexClient, author, cursor, feed, limit, postUri))
+	return normalizeResult(gyoka.FeedListPosts(ctx, c.lexClient, author, cursor, feed, limit, postUri))
 }
 
 func (c *Client) TrimPosts(ctx context.Context, input *gyoka.FeedTrimPosts_Input) (*gyoka.FeedTrimPosts_Output, error) {

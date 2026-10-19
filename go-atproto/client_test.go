@@ -176,7 +176,7 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 	_, _ = client.RemovePosts(ctx, nil)
 	_, _ = client.RemovePostsByAuthor(ctx, nil)
 	_, _ = client.MovePosts(ctx, nil)
-	_, _ = client.GetPosts(ctx, "feed", "uri", "author", 10, "cursor")
+	_, _ = client.ListPosts(ctx, "feed", "uri", "author", "cursor", 10)
 	_, _ = client.TrimPosts(ctx, nil)
 	_, _ = client.PrunePostsBefore(ctx, nil)
 	_, _ = client.RebalanceOrder(ctx, nil)
@@ -193,7 +193,7 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 		"net.nusno.gyoka.feed.removePosts",
 		"net.nusno.gyoka.feed.removePostsByAuthor",
 		"net.nusno.gyoka.feed.movePosts",
-		"net.nusno.gyoka.feed.getPosts",
+		"net.nusno.gyoka.feed.listPosts",
 		"net.nusno.gyoka.feed.trimPosts",
 		"net.nusno.gyoka.feed.prunePostsBefore",
 		"net.nusno.gyoka.feed.rebalanceOrder",
@@ -205,10 +205,10 @@ func TestClientDelegatesEveryLexiconEndpoint(t *testing.T) {
 	}
 }
 
-func TestGetPostsForwardsFilters(t *testing.T) {
+func TestListPostsForwardsFilters(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/xrpc/net.nusno.gyoka.feed.getPosts" {
-			t.Errorf("request path = %q, want getPosts endpoint", request.URL.Path)
+		if request.URL.Path != "/xrpc/net.nusno.gyoka.feed.listPosts" {
+			t.Errorf("request path = %q, want listPosts endpoint", request.URL.Path)
 		}
 
 		query := request.URL.Query()
@@ -234,13 +234,13 @@ func TestGetPostsForwardsFilters(t *testing.T) {
 		t.Fatalf("new client: %v", err)
 	}
 
-	_, err = client.GetPosts(
+	_, err = client.ListPosts(
 		context.Background(),
 		"at://did:plc:test/app.bsky.feed.generator/feed",
 		"at://did:plc:test/app.bsky.feed.post/post",
 		"did:plc:test",
-		10,
 		"next-page",
+		10,
 	)
 	if err != nil {
 		t.Fatalf("get posts: %v", err)
