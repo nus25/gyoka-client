@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/bluesky-social/indigo/atproto/atclient"
@@ -208,6 +209,73 @@ func TestNewWithInterServiceAuthRejectsAuthorizationHeader(t *testing.T) {
 	})
 	if err == nil || !strings.Contains(err.Error(), "reserved for inter-service authentication") {
 		t.Fatalf("error = %v, want reserved Authorization header error", err)
+	}
+}
+
+func TestNewWithInterServiceAuthRejectsRedirects(t *testing.T) {
+	privateKey, err := atcrypto.GeneratePrivateKeyP256()
+	if err != nil {
+		t.Fatalf("generate private key: %v", err)
+	}
+
+	tests := []struct {
+		name       string
+		sameHost   bool
+		statusCode int
+	}{
+		{name: "same host", sameHost: true, statusCode: http.StatusFound},
+		{name: "different host", statusCode: http.StatusTemporaryRedirect},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var redirectedRequests atomic.Int32
+			target := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+				redirectedRequests.Add(1)
+				response.Header().Set("Content-Type", "application/json")
+				_, _ = response.Write([]byte(`{"message":"redirected"}`))
+			}))
+			defer target.Close()
+
+			server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+				if request.URL.Path == "/redirected" {
+					redirectedRequests.Add(1)
+					response.Header().Set("Content-Type", "application/json")
+					_, _ = response.Write([]byte(`{"message":"redirected"}`))
+					return
+				}
+				if got := request.Header.Get("CF-Access-Client-Secret"); got != "redirect-test-secret-83a1" {
+					t.Errorf("initial request missing custom header")
+				}
+				location := strings.Replace(target.URL, "127.0.0.1", "localhost", 1)
+				if test.sameHost {
+					location = "/redirected"
+				}
+				http.Redirect(response, request, location, test.statusCode)
+			}))
+			defer server.Close()
+
+			client, err := NewWithInterServiceAuth(InterServiceAuthConfig{
+				Host:       server.URL,
+				Audience:   "did:web:editor.example.com#gyoka_editor",
+				Issuer:     syntax.DID("did:plc:ewvi7nxzyoun6zhxrhsample"),
+				PrivateKey: privateKey,
+				Headers:    http.Header{"CF-Access-Client-Secret": []string{"redirect-test-secret-83a1"}},
+			})
+			if err != nil {
+				t.Fatalf("new client: %v", err)
+			}
+			_, err = client.Ping(context.Background())
+			if got := redirectedRequests.Load(); got != 0 {
+				t.Errorf("redirect destination received %d requests, want none", got)
+			}
+			var apiErr *APIError
+			if !errors.As(err, &apiErr) {
+				t.Fatalf("ping error = %v, want API error", err)
+			}
+			if apiErr.StatusCode != test.statusCode {
+				t.Errorf("ping status = %d, want %d", apiErr.StatusCode, test.statusCode)
+			}
+		})
 	}
 }
 

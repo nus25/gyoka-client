@@ -82,6 +82,7 @@ func newWithDirectory(ctx context.Context, host, identifier, appPassword string,
 //
 // Audience is the full receiving service reference used in the JWT aud claim.
 // Issuer and PrivateKey must correspond to the issuer DID's #atproto key.
+// Redirects are not followed for direct inter-service requests.
 func NewWithInterServiceAuth(config InterServiceAuthConfig) (*Client, error) {
 	if config.Host == "" {
 		return nil, fmt.Errorf("Gyoka host is required")
@@ -102,6 +103,11 @@ func NewWithInterServiceAuth(config InterServiceAuthConfig) (*Client, error) {
 	}
 
 	apiClient := atclient.NewAPIClient(config.Host)
+	httpClient := *apiClient.Client
+	httpClient.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	apiClient.Client = &httpClient
 	apiClient.Auth = &serviceAuthMethod{
 		audience:   config.Audience,
 		issuer:     config.Issuer,
