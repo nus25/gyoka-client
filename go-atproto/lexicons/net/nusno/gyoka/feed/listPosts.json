@@ -40,11 +40,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": [
-            "feed",
-            "orderRevision",
-            "posts"
-          ],
+          "required": ["feed", "orderRevision", "posts"],
           "properties": {
             "feed": {
               "type": "string",

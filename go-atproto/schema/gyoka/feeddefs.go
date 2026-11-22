@@ -28,8 +28,8 @@ type FeedDefs_FeedView struct {
 // FeedDefs_Placement is a "placement" in the net.nusno.gyoka.feed.defs schema.
 type FeedDefs_Placement struct {
 	// anchor: AT-URI of the anchor post. Required by before and after placements.
-	Anchor *string `json:"anchor,omitempty" cborgen:"anchor,omitempty"`
-	Type   string  `json:"type" cborgen:"type"`
+	Anchor   *string `json:"anchor,omitempty" cborgen:"anchor,omitempty"`
+	Position string  `json:"position" cborgen:"position"`
 }
 
 // FeedDefs_PostInput is the input argument to a net.nusno.gyoka.feed.defs call.

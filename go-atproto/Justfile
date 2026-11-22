@@ -12,3 +12,6 @@ example:
 
 lexgen:
     go tool lexgen  --package gyoka --build-file ./lexgen/gyoka.json ./lexicons/
+
+update-lexicons:
+    bash ./scripts/update-lexicons.sh
