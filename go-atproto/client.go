@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bluesky-social/indigo/atproto/atclient"
@@ -31,15 +32,21 @@ type InterServiceAuthConfig struct {
 	Audience   string
 	Issuer     syntax.DID
 	PrivateKey atcrypto.PrivateKey
+	Headers    http.Header
 }
 
 type serviceAuthMethod struct {
 	audience   string
 	issuer     syntax.DID
 	privateKey atcrypto.PrivateKey
+	headers    http.Header
 }
 
 func (a *serviceAuthMethod) DoWithAuth(httpClient *http.Client, request *http.Request, endpoint syntax.NSID) (*http.Response, error) {
+	for name, values := range a.headers {
+		request.Header[name] = append([]string(nil), values...)
+	}
+
 	token, err := auth.SignServiceAuth(a.issuer, a.audience, serviceAuthTTL, &endpoint, a.privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("sign inter-service authentication JWT: %w", err)
@@ -88,12 +95,18 @@ func NewWithInterServiceAuth(config InterServiceAuthConfig) (*Client, error) {
 	if config.PrivateKey == nil {
 		return nil, fmt.Errorf("issuer private key is required")
 	}
+	for name := range config.Headers {
+		if strings.EqualFold(name, "Authorization") {
+			return nil, fmt.Errorf("custom header %q is reserved for inter-service authentication", name)
+		}
+	}
 
 	apiClient := atclient.NewAPIClient(config.Host)
 	apiClient.Auth = &serviceAuthMethod{
 		audience:   config.Audience,
 		issuer:     config.Issuer,
 		privateKey: config.PrivateKey,
+		headers:    config.Headers.Clone(),
 	}
 	return &Client{lexClient: apiClient}, nil
 }

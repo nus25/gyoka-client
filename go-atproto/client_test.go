@@ -95,8 +95,10 @@ func TestNewWithDirectoryAuthenticatesAndProxiesRequests(t *testing.T) {
 
 func TestNewWithInterServiceAuthAuthenticatesDirectRequest(t *testing.T) {
 	const (
-		issuerDID = "did:plc:ewvi7nxzyoun6zhxrhsample"
-		audience  = "did:web:editor.example.com#gyoka_editor"
+		issuerDID          = "did:plc:ewvi7nxzyoun6zhxrhsample"
+		audience           = "did:web:editor.example.com#gyoka_editor"
+		accessClientID     = "gyoka-test-client-id-123456"
+		accessClientSecret = "gyoka-test-client-secret-123456"
 	)
 
 	privateKey, err := atcrypto.GeneratePrivateKeyP256()
@@ -120,45 +122,92 @@ func TestNewWithInterServiceAuthAuthenticatesDirectRequest(t *testing.T) {
 	})
 	validator := auth.ServiceAuthValidator{Audience: audience, Dir: directory}
 
-	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if request.URL.Path != "/xrpc/net.nusno.gyoka.ping" {
-			t.Errorf("request path = %q, want ping endpoint", request.URL.Path)
-		}
-		if proxy := request.Header.Get("Atproto-Proxy"); proxy != "" {
-			t.Errorf("Atproto-Proxy = %q, want empty", proxy)
-		}
+	testCases := []struct {
+		name             string
+		headers          http.Header
+		wantClientID     string
+		wantClientSecret string
+	}{
+		{
+			name:             "custom headers",
+			wantClientID:     accessClientID,
+			wantClientSecret: accessClientSecret,
+			headers: http.Header{
+				"CF-Access-Client-Id":     []string{accessClientID},
+				"CF-Access-Client-Secret": []string{accessClientSecret},
+			},
+		},
+		{name: "without custom headers"},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+				if request.URL.Path != "/xrpc/net.nusno.gyoka.ping" {
+					t.Errorf("request path = %q, want ping endpoint", request.URL.Path)
+				}
+				if proxy := request.Header.Get("Atproto-Proxy"); proxy != "" {
+					t.Errorf("Atproto-Proxy = %q, want empty", proxy)
+				}
+				if got := request.Header.Get("CF-Access-Client-Id"); got != testCase.wantClientID {
+					t.Errorf("CF-Access-Client-Id = %q, want %q", got, testCase.wantClientID)
+				}
+				if got := request.Header.Get("CF-Access-Client-Secret"); got != testCase.wantClientSecret {
+					t.Errorf("CF-Access-Client-Secret = %q, want %q", got, testCase.wantClientSecret)
+				}
 
-		endpoint := syntax.NSID("net.nusno.gyoka.ping")
-		token := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
-		issuer, err := validator.Validate(request.Context(), token, &endpoint)
-		if err != nil {
-			t.Errorf("validate service auth JWT: %v", err)
-		}
-		if issuer.String() != issuerDID {
-			t.Errorf("issuer = %q, want %q", issuer, issuerDID)
-		}
+				endpoint := syntax.NSID("net.nusno.gyoka.ping")
+				token := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
+				issuer, err := validator.Validate(request.Context(), token, &endpoint)
+				if err != nil {
+					t.Errorf("validate service auth JWT: %v", err)
+				}
+				if issuer.String() != issuerDID {
+					t.Errorf("issuer = %q, want %q", issuer, issuerDID)
+				}
 
-		response.Header().Set("Content-Type", "application/json")
-		_, _ = response.Write([]byte(`{"message":"ok"}`))
-	}))
-	defer server.Close()
+				response.Header().Set("Content-Type", "application/json")
+				_, _ = response.Write([]byte(`{"message":"ok"}`))
+			}))
+			defer server.Close()
 
-	client, err := NewWithInterServiceAuth(InterServiceAuthConfig{
-		Host:       server.URL,
-		Audience:   audience,
-		Issuer:     syntax.DID(issuerDID),
+			client, err := NewWithInterServiceAuth(InterServiceAuthConfig{
+				Host:       server.URL,
+				Audience:   audience,
+				Issuer:     syntax.DID(issuerDID),
+				PrivateKey: privateKey,
+				Headers:    testCase.headers,
+			})
+			if err != nil {
+				t.Fatalf("new client: %v", err)
+			}
+
+			output, err := client.Ping(context.Background())
+			if err != nil {
+				t.Fatalf("ping: %v", err)
+			}
+			if output.Message != "ok" {
+				t.Errorf("ping message = %q, want %q", output.Message, "ok")
+			}
+		})
+	}
+}
+
+func TestNewWithInterServiceAuthRejectsAuthorizationHeader(t *testing.T) {
+	privateKey, err := atcrypto.GeneratePrivateKeyP256()
+	if err != nil {
+		t.Fatalf("generate private key: %v", err)
+	}
+
+	_, err = NewWithInterServiceAuth(InterServiceAuthConfig{
+		Host:       "editor.example.com",
+		Audience:   "did:web:editor.example.com#gyoka_editor",
+		Issuer:     syntax.DID("did:plc:ewvi7nxzyoun6zhxrhsample"),
 		PrivateKey: privateKey,
+		Headers:    http.Header{"authorization": []string{"caller-value"}},
 	})
-	if err != nil {
-		t.Fatalf("new client: %v", err)
-	}
-
-	output, err := client.Ping(context.Background())
-	if err != nil {
-		t.Fatalf("ping: %v", err)
-	}
-	if output.Message != "ok" {
-		t.Errorf("ping message = %q, want %q", output.Message, "ok")
+	if err == nil || !strings.Contains(err.Error(), "reserved for inter-service authentication") {
+		t.Fatalf("error = %v, want reserved Authorization header error", err)
 	}
 }
 
